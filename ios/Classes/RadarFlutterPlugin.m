@@ -4,7 +4,6 @@
 
 @interface RadarFlutterPlugin()
  @property (strong, readwrite) CLLocationManager *locationManager;
-//  @property (copy, nonatomic)   FlutterEventSink   flutterEventSink;
 @end
 
 @implementation RadarFlutterPlugin
@@ -109,6 +108,19 @@
       BOOL isTracking = [Radar isTracking];
         result(isTracking ? @"True" : @"False" );
     }
+    else if ([@"getMetadata" isEqualToString:call.method]) {
+        result([Radar getMetadata]);
+      }
+    else if ([@"setAdIdEnabled" isEqualToString:call.method]) {
+      BOOL setAdId = call.arguments[@"AdIdEnabled"];
+      [Radar setAdIdEnabled:setAdId];
+      result(nil);
+    }
+    else if ([@"searchGeofences" isEqualToString:call.method]) {
+      [self searchGeofences:call withResult:result];
+    }
+    //   else if ([@"getContext" isEqualToString:call.method]) {
+    //   }
     // else if ([@"acceptEvent" isEqualToString:call.method]) {
     //   if (call.arguments[@"verifiedPlaceId"]) {
     //     NSString *eventIdString = call.arguments["eventId"];
@@ -124,18 +136,6 @@
     //   NSString *eventIdString = call.arguments["eventId"];
     //   [Radar rejectEventId:eventIdString];
     // }
-    else if ([@"getMetadata" isEqualToString:call.method]) {
-        result([Radar getMetadata]);
-      }
-    else if ([@"setAdIdEnabled" isEqualToString:call.method]) {
-      BOOL setAdId = call.arguments[@"AdIdEnabled"];
-      [Radar setAdIdEnabled:setAdId];
-      result(nil);
-    }
-  //   else if ([@"getContext" isEqualToString:call.method]) {
-  //   }
-  //   else if ([@"searchGeofences" isEqualToString:call.method]) {
-  //   }
   //   else if ([@"searchPlaces" isEqualToString:call.method]) {
   //   }
   //   else if ([@"searchPoints" isEqualToString:call.method]) {
@@ -295,10 +295,59 @@
         [Radar startTrackingWithOptions:RadarTrackingOptions.continuous];
         break;
       default:
-        [Radar startTrackingWithOptions:RadarTrackingOptions.efficient];
+        [Radar startTrackingWithOptions:RadarTrackingOptions.responsive];
         break;
   }
   result(nil);
 }
+- (void)searchGeofences:(FlutterMethodCall *)call withResult:(FlutterResult)result {
+        RadarSearchGeofencesCompletionHandler completionHandler = ^(RadarStatus status, CLLocation * _Nullable location, NSArray<RadarGeofence *> * _Nullable geofences) {
+            if (status == RadarStatusSuccess) {
+              NSMutableDictionary *dict = [NSMutableDictionary new];
+              [dict setObject:[Radar stringForStatus:status] forKey:@"status"];
+              if (location) {
+                  [dict setObject:[Radar dictionaryForLocation:location] forKey:@"location"];
+              }
+              if (geofences) {
+                  [dict setObject:[RadarGeofence arrayForGeofences:geofences] forKey:@"geofences"];
+              }
+              result(dict);
+            }
+        };
 
+        CLLocation *near;
+        NSDictionary *nearDict = call.arguments[@"near"];
+        if (nearDict) {
+            NSNumber *latitudeNumber = nearDict[@"latitude"];
+            NSNumber *longitudeNumber = nearDict[@"longitude"];
+            double latitude = [latitudeNumber doubleValue];
+            double longitude = [longitudeNumber doubleValue];
+            near = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:-1 horizontalAccuracy:5 verticalAccuracy:-1 timestamp:[NSDate date]];
+        }
+        NSNumber *radiusNumber = call.arguments[@"radius"];
+        int radius;
+        if (radiusNumber != nil && [radiusNumber isKindOfClass:[NSNumber class]]) {
+            radius = [radiusNumber intValue];
+        } else {
+            radius = 1000;
+        }
+        NSArray *tags = call.arguments[@"tags"];
+//        NSString *tagsString = [tags componentsJoinedByString:@","];
+//        NSDictionary *metadata = call.arguments[@"metadata"];
+        NSDictionary *metadata = nil;
+//        NSLog(@"metadata present: %@", metadata);
+        NSNumber *limitNumber = call.arguments[@"limit"];
+        int limit;
+        if (limitNumber != nil && [limitNumber isKindOfClass:[NSNumber class]]) {
+            limit = [limitNumber intValue];
+        } else {
+            limit = 10;
+        }
+
+        if (near) {
+            [Radar searchGeofencesNear:near radius:radius tags:tags metadata:metadata limit:limit completionHandler:completionHandler];
+        } else {
+            [Radar searchGeofencesWithRadius:radius tags:tags metadata:metadata limit:limit completionHandler:completionHandler];
+        }
+}
 @end

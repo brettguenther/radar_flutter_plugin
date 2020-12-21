@@ -167,5 +167,23 @@ class RadarFlutterPlugin {
   }
 
   // static Future<Map> getContext([Map<String, dynamic> location]) async {}
-  // static Future<Map> searchGeofences(Map<String, dynamic> location,[int radius, int limit, List tags]) async {}
+  static Future<Map> searchGeofences(Map<String, dynamic> near,
+      [int radius, int limit, List tags, Map<String, dynamic> metadata]) async {
+    try {
+      final Map searchGeofencesResult =
+          await _channel.invokeMethod('searchGeofences', <String, dynamic>{
+        "near": near,
+        "radius": radius,
+        "limit": limit,
+        "tags": tags
+        // ,
+        // "metadata": metadata
+      });
+      return searchGeofencesResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> searchError = {'error': e.code};
+      return searchError;
+    }
+  }
 }

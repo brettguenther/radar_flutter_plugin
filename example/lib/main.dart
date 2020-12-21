@@ -20,7 +20,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> initRadar() async {
     print("starting radar");
     try {
-      await RadarFlutterPlugin.initialize("<publishableKey>");
+      await RadarFlutterPlugin.initialize(
+          "<publishableKey>");
     } on PlatformException catch (e) {
       print(e.message);
     }
@@ -31,6 +32,16 @@ class _MyAppState extends State<MyApp> {
     print(userString);
     // Map<String, String> metadata = {"k1": "v1"};
     // RadarFlutterPlugin.setMetadata(metadata);
+    Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
+        {
+          "latitude": 40.704103,
+          "longitude": -73.987067,
+          "accuracy": 50.0,
+        },
+        550,
+        5,
+        ["store"]);
+    print(nearbyGeofences["geofences"]);
   }
 
   @override

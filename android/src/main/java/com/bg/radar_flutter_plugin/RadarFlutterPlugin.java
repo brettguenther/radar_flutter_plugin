@@ -2,7 +2,6 @@ package com.bg.radar_flutter_plugin;
 
 import android.Manifest;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import android.app.Activity;
@@ -10,20 +9,16 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
-import android.util.Log;
 import android.os.Looper;
 import android.os.Handler;
-import android.location.Location;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -35,9 +30,9 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 import io.radar.sdk.Radar;
-import io.radar.sdk.RadarReceiver;
 import io.radar.sdk.RadarTrackingOptions;
 import io.radar.sdk.model.RadarEvent;
+import io.radar.sdk.model.RadarGeofence;
 import io.radar.sdk.model.RadarUser;
 
 /** RadarFlutterPlugin */
@@ -159,6 +154,12 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                     break;
                 case "isTracking":
                     isTracking(result);
+                    break;
+                case "getMetadata":
+                    getMetadata(result);
+                    break;
+                case "searchGeofences":
+                    searchGeofences(call,result);
                     break;
                 default:
                     result.notImplemented();
@@ -296,14 +297,14 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         };
         if (call.argument("location") != null) {
             final HashMap locationMap = (HashMap) call.argument("location");
-            double latitude = (Double) locationMap.get("latitude");
-            double longitude = (Double) locationMap.get("longitude");
-            double accuracy = (Double) locationMap.get("accuracy");
-            float fAccuracy = (float)accuracy;
-            Location location = new Location("RadarFlutterPlugin");
-            location.setLatitude(latitude);
-            location.setLongitude(longitude);
-            location.setAccuracy(fAccuracy);
+            // double latitude = (Double) locationMap.get("latitude");
+            // double longitude = (Double) locationMap.get("longitude");
+            // double accuracy = (Double) locationMap.get("accuracy");
+            // float fAccuracy = (float)accuracy;
+            Location location = locationMapToLocation(locationMap,"RadarFlutterPlugin");
+            // location.setLatitude(latitude);
+            // location.setLongitude(longitude);
+            // location.setAccuracy(fAccuracy);
             Radar.trackOnce(location, callback);
         }
         else {
@@ -331,6 +332,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     }
 
     private void startTrackingCustom(MethodCall call, Result result) {
+        // TO DO: is this ok?
         final JSONObject trackingOptions = (JSONObject) call.arguments;
         RadarTrackingOptions options = RadarTrackingOptions.fromJson(trackingOptions);
         Radar.startTracking(options);
@@ -346,4 +348,90 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         final Boolean isTracking = Radar.isTracking();
         result.success(isTracking);
     }
+
+    private void getMetadata(Result result) {
+        HashMap<String,Object> hObj = new Gson().fromJson(Radar.getMetadata().toString(), HashMap.class);
+        result.success(hObj);
+    }
+
+    private void searchGeofences(MethodCall call, final Result result) {
+        Radar.RadarSearchGeofencesCallback callback = new Radar.RadarSearchGeofencesCallback() {
+            @Override
+            public void onComplete(final Radar.RadarStatus status, final Location location, final RadarGeofence[] geofences) {
+                runOnMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                    try {
+                        JSONObject obj = new JSONObject();
+                        obj.put("status", status.toString());
+                        if (location != null) {
+                            obj.put("location", Radar.jsonForLocation(location));
+                        }
+                        if (geofences != null) {
+                            obj.put("geofences", RadarGeofence.toJson(geofences));
+                        }
+                        HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                        result.success(hObj);
+                    } catch (JSONException e) {
+                        result.error("SEARCH_GEOFENCE_ERROR", "An unexcepted error happened during the searchGeofences callback logic" + e.getMessage(), null);
+                    }
+                }});
+        };
+    };
+        // final JSONObject optionsObj = args.getJSONObject(0);
+        Location near = null;
+        if (call.hasArgument("near")) {
+            final HashMap locationMap = (HashMap) call.argument("near");
+            // double latitude = (Double) locationMap.get("latitude");
+            // double longitude = (Double) locationMap.get("longitude");
+            // double accuracy = (Double) locationMap.get("accuracy");
+            // float fAccuracy = (float)accuracy;
+            near = locationMapToLocation(locationMap,"RadarFlutterPlugin");
+            // location.setLatitude(latitude);
+            // location.setLongitude(longitude);
+            // location.setAccuracy(fAccuracy);
+        }
+        JSONObject metadata = call.hasArgument("metadata") ? (JSONObject) call.argument("metadata") : null;
+        int radius = call.hasArgument("radius") ? (int) call.argument("radius") : 1000;
+        String[] tags = new String[0];
+        try {
+            tags = call.hasArgument("tags") ? strArrayForArrList((ArrayList) call.argument("tags")) : null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        int limit = call.hasArgument("limit") ? (int) call.argument("limit") : 10;
+
+        if (near != null) {
+            Radar.searchGeofences(near, radius, tags, metadata, limit, callback);
+        } else {
+            Radar.searchGeofences(radius, tags, metadata, limit, callback);
+        }
+    }
+
+    private Location locationMapToLocation(HashMap locationMap, String locationName) {
+        double latitude = (Double) locationMap.get("latitude");
+        double longitude = (Double) locationMap.get("longitude");
+        double accuracy = (Double) locationMap.get("accuracy");
+        float fAccuracy = (float)accuracy;
+        Location location = new Location(locationName);
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        location.setAccuracy(fAccuracy);
+        return location;
+    }
+
+    private static String[] strArrayForArrList(ArrayList arrList) throws JSONException {
+        // if (arrList == null) {
+        //     return null;
+        // }
+
+        // String[] arr = new String[arrList.size()];
+        // for (int i = 0; i < arr.length; i++) {
+        //     arr[i] = arrList.optString(i);
+        // }
+        // return arr;
+        String[] stringArray = (String[]) arrList.toArray(new String[0]);
+        return stringArray;
+    }
+
 };
