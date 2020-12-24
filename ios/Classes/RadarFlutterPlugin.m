@@ -2,7 +2,8 @@
 #import <RadarSDK/RadarSDK.h>
 #import <CoreLocation/CoreLocation.h>
 
-@interface RadarFlutterPlugin()
+@interface RadarFlutterPlugin() <RadarDelegate>
+ @property (strong, nonatomic) FlutterMethodChannel *channel;
  @property (strong, readwrite) CLLocationManager *locationManager;
 @end
 
@@ -12,6 +13,7 @@
       methodChannelWithName:@"radar_flutter_plugin"
             binaryMessenger:[registrar messenger]];
   RadarFlutterPlugin* instance = [[RadarFlutterPlugin alloc] init];
+  instance.channel = channel;
   [registrar addMethodCallDelegate:instance channel:channel];
 }
 
@@ -22,7 +24,7 @@
         return nil;
     }
     self.locationManager = [[CLLocationManager alloc] init];
-//    [Radar setDelegate:self];
+   [Radar setDelegate:self];
     return self;
 }
 
@@ -300,6 +302,7 @@
   }
   result(nil);
 }
+
 - (void)searchGeofences:(FlutterMethodCall *)call withResult:(FlutterResult)result {
         RadarSearchGeofencesCompletionHandler completionHandler = ^(RadarStatus status, CLLocation * _Nullable location, NSArray<RadarGeofence *> * _Nullable geofences) {
             if (status == RadarStatusSuccess) {
@@ -350,4 +353,31 @@
             [Radar searchGeofencesWithRadius:radius tags:tags metadata:metadata limit:limit completionHandler:completionHandler];
         }
 }
+
+#pragma mark - RadarDelegate Methods
+- (void)didReceiveEvents:(NSArray<RadarEvent *> *)events user:(RadarUser *)user {
+  NSDictionary *dict = @{@"events": [RadarEvent arrayForEvents:events], @"user": [user dictionaryValue]};
+  [_channel invokeMethod:@"onEvents" arguments:dict];
+}
+
+- (void)didUpdateLocation:(CLLocation *)location user:(RadarUser *)user {
+  NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"user": [user dictionaryValue]};
+  [_channel invokeMethod:@"onLocation" arguments:dict];
+}
+
+- (void)didUpdateClientLocation:(CLLocation *)location stopped:(BOOL)stopped source:(RadarLocationSource)source {
+    NSLog(@"did update client location");
+  NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"stopped": @(stopped), @"source": [Radar stringForSource:source]};
+  [_channel invokeMethod:@"onClientLocation" arguments:dict];
+}
+
+- (void)didFailWithStatus:(RadarStatus)status {
+  NSDictionary *dict = @{@"status": [Radar stringForStatus:status]};
+  [_channel invokeMethod:@"onError" arguments:dict];
+}
+
+- (void)didLogMessage:(NSString *)message {
+
+}
+
 @end

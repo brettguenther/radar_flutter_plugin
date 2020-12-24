@@ -6,6 +6,18 @@ class RadarFlutterPlugin {
   static const MethodChannel _channel =
       const MethodChannel('radar_flutter_plugin');
 
+  static Function(Map result) _clientLocationHandler;
+  static Function(Map result) _eventHandler;
+  static Function(Map result) _locationHandler;
+  static Function(Map result) _errorHandler;
+
+  // RadarFlutterPlugin() {
+  //   RadarFlutterPlugin._channel
+  //       .setMethodCallHandler(RadarFlutterPlugin._handleMethod);
+  // }
+
+  // static RadarFlutterPlugin shared = new RadarFlutterPlugin();
+
   static Future initialize(String publishableKey) async {
     var params = <String, String>{
       'publishableKey': publishableKey,
@@ -186,4 +198,69 @@ class RadarFlutterPlugin {
       return searchError;
     }
   }
+
+  // static clientLocation(Function(Map<dynamic, dynamic> result) resultProcess) {
+  //   _channel.setMethodCallHandler((MethodCall methodCall) async {
+  //     if (methodCall.method == "clientLocation") {
+  //       Map resultData = Map.from(methodCall.arguments);
+  //       resultProcess(resultData);
+  //     }
+  //   });
+  // }
+
+  static startListeners() {
+    _channel.setMethodCallHandler((MethodCall methodCall) async {
+      print("in method call handler logic");
+      if (methodCall.method == "onClientLocation" &&
+          _clientLocationHandler != null) {
+        print("processing client location");
+        Map resultData = Map.from(methodCall.arguments);
+        _clientLocationHandler(resultData);
+      } else if (methodCall.method == "onEvents" && _eventHandler != null) {
+        print("processing events");
+        Map resultData = Map.from(methodCall.arguments);
+        _eventHandler(resultData);
+      } else if (methodCall.method == "onLocation" &&
+          _locationHandler != null) {
+        print("processing location");
+        Map resultData = Map.from(methodCall.arguments);
+        _locationHandler(resultData);
+      } else if (methodCall.method == "onError" && _errorHandler != null) {
+        print("processing error");
+        Map resultData = Map.from(methodCall.arguments);
+        _errorHandler(resultData);
+      }
+      return null;
+    });
+  }
+
+  // static location(Function(Map<String, dynamic> result) result) {}
+  // static error(Function(Map<String, dynamic> result) result) {}
+  // static events(Function(Map<String, dynamic> result) result) {}
+
+  static onClientLocation(
+      Function(Map<dynamic, dynamic> result) resultProcess) {
+    _clientLocationHandler = resultProcess;
+  }
+
+  static onEvents(Function(Map<dynamic, dynamic> result) resultProcess) {
+    _eventHandler = resultProcess;
+  }
+
+  static onLocation(Function(Map<dynamic, dynamic> result) resultProcess) {
+    _locationHandler = resultProcess;
+  }
+
+  static onError(Function(Map<dynamic, dynamic> result) resultProcess) {
+    _errorHandler = resultProcess;
+  }
+
+  // static Future<Null> _handleMethod(MethodCall call) async {
+  //   print("handling method call");
+  //   Map resultData = Map.from(call.arguments);
+  //   if (call.method == "clientLocation") {
+  //     _clientLocationHandler(resultData);
+  //   }
+  //   return null;
+  // }
 }

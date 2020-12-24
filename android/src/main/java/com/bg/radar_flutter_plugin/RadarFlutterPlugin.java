@@ -11,6 +11,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Looper;
 import android.os.Handler;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -30,6 +31,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 import io.radar.sdk.Radar;
+import io.radar.sdk.RadarReceiver;
 import io.radar.sdk.RadarTrackingOptions;
 import io.radar.sdk.model.RadarEvent;
 import io.radar.sdk.model.RadarGeofence;
@@ -41,7 +43,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     ///
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
-    private MethodChannel channel;
+    public static MethodChannel channel;
     private Activity activity;
     private Registrar registrar;
 
@@ -177,6 +179,16 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
            Handler handler = new Handler(Looper.getMainLooper());
            handler.post(runnable);
         }
+     }
+
+    private void invokeMethodOnUiThread(final String methodName, final HashMap map) {
+        final MethodChannel channel = this.channel;
+        runOnMainThread(new Runnable() {
+           @Override
+           public void run() {
+              channel.invokeMethod(methodName, map);
+           }
+        });
      }
 
     private void initialize(MethodCall call, Result result) {
@@ -432,6 +444,74 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         // return arr;
         String[] stringArray = (String[]) arrList.toArray(new String[0]);
         return stringArray;
+    }
+
+    public static class RadarFlutterReceiver extends RadarReceiver {
+
+        // private static final String TAG = "RadarReceiverActivity";
+        @Override
+        public void onEventsReceived(Context context, RadarEvent[] events, RadarUser user) {
+            // Log.d("RadarFlutterPlugin", "Events received");
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("events", RadarEvent.toJson(events));
+                obj.put("user", user.toJson());
+                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                RadarFlutterPlugin.channel.invokeMethod("onEvents",hObj);
+            } catch (JSONException e) {
+                Log.d("RadarFlutterPlugin", "Error in client location handling: " + e.getMessage());
+            }
+//            invokeMethodOnUiThread("clientLocation",hObj);
+//            this.channel.invokeMethod("clientLocation",hObj);
+        }
+    
+        public void onClientLocationUpdated(Context context, Location location, boolean stopped, Radar.RadarLocationSource locationSource) {
+            // Log.d("RadarFlutterPlugin", "Client location updated");
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("location", Radar.jsonForLocation(location));
+                obj.put("stopped", stopped);
+                obj.put("locationSource", locationSource.name());
+                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                RadarFlutterPlugin.channel.invokeMethod("onClientLocation",hObj);
+            } catch (JSONException e) {
+                Log.d("RadarFlutterPlugin", "Error in client location handling: "  + e.getMessage());
+            }
+//            invokeMethodOnUiThread("clientLocation",hObj);
+//            this.channel.invokeMethod("clientLocation",hObj);
+        }
+    
+        @Override
+        public void onLocationUpdated(Context context, Location location, RadarUser user) {
+            // Log.d("RadarFlutterPlugin", "Location updated" );
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("location", Radar.jsonForLocation(location));
+                obj.put("user", user.toJson());
+                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                RadarFlutterPlugin.channel.invokeMethod("onLocation",hObj);
+            } catch (JSONException e) {
+                Log.d("RadarFlutterPlugin", "Error in location handling: "  + e.getMessage());
+            }
+        }
+    
+        @Override
+        public void onError(Context context, Radar.RadarStatus status) {
+            // Log.d("RadarFlutterPlugin", "Errored");
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("status", status.toString());
+                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                RadarFlutterPlugin.channel.invokeMethod("onError",hObj);
+            } catch (JSONException e) {
+                Log.d("RadarFlutterPlugin", "Error in error handling:  "  + e.getMessage());
+            }
+        }
+    
+        @Override
+        public void onLog(Context context,String message) {
+            // Log.d("RadarFlutterPlugin", "Logged line");
+        }
     }
 
 };

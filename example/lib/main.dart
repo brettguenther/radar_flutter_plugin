@@ -20,16 +20,30 @@ class _MyAppState extends State<MyApp> {
   Future<void> initRadar() async {
     print("starting radar");
     try {
-      await RadarFlutterPlugin.initialize(
-          "<publishableKey>");
+      await RadarFlutterPlugin.initialize("<yourPublishableKey>");
     } on PlatformException catch (e) {
       print(e.message);
     }
     RadarFlutterPlugin.setLogLevel("DEBUG");
-    RadarFlutterPlugin.setUserId("flutter-example");
-    RadarFlutterPlugin.setDescription("Flutter Example");
+    RadarFlutterPlugin.setUserId("flutter-uuid");
+    RadarFlutterPlugin.setDescription("Flutter Example User");
     String userString = await RadarFlutterPlugin.getUserId();
     print(userString);
+
+    RadarFlutterPlugin.onClientLocation((result) {
+      print(result);
+    });
+    RadarFlutterPlugin.onEvents((result) {
+      print(result);
+    });
+    RadarFlutterPlugin.onLocation((result) {
+      print(result);
+    });
+    RadarFlutterPlugin.onError((result) {
+      print(result);
+    });
+    RadarFlutterPlugin.startListeners();
+
     // Map<String, String> metadata = {"k1": "v1"};
     // RadarFlutterPlugin.setMetadata(metadata);
     Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
