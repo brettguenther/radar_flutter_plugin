@@ -44,18 +44,77 @@ class _MyAppState extends State<MyApp> {
     });
     RadarFlutterPlugin.startListeners();
 
-    // Map<String, String> metadata = {"k1": "v1"};
-    // RadarFlutterPlugin.setMetadata(metadata);
-    Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
-        {
-          "latitude": 40.704103,
-          "longitude": -73.987067,
-          "accuracy": 50.0,
-        },
-        550,
-        5,
-        ["store"]);
-    print(nearbyGeofences["geofences"]);
+    Map<String, String> metadata = {"mKey": "mValue"};
+    RadarFlutterPlugin.setMetadata(metadata);
+    Map userMetadata = await RadarFlutterPlugin.getMetadata();
+    print("current metadata: ");
+    print(userMetadata);
+    // Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
+    //     {
+    //       "latitude": 40.704103,
+    //       "longitude": -73.987067,
+    //     },
+    //     5000,
+    //     5,
+    //     ["store"]);
+    // print("nearby geofences output:");
+    // print(nearbyGeofences["geofences"]);
+
+    // Map context = await RadarFlutterPlugin.getContext({
+    //   "latitude": 40.704103,
+    //   "longitude": -73.987067,
+    // });
+    // print("context output:");
+    // print(context["context"]);
+
+    // Map nearbyPlaces = await RadarFlutterPlugin.searchPlaces(
+    //     {"latitude": 40.704103, "longitude": -73.987067},
+    //     5000,
+    //     5,
+    //     ["starbucks"]);
+    // print("nearby places output:");
+    // print(nearbyPlaces["places"]);
+
+    // Map nearbyPoints = await RadarFlutterPlugin.searchPoints(
+    //     {
+    //       "latitude": 40.704103,
+    //       "longitude": -73.987067,
+    //     },
+    //     5000,
+    //     5,
+    //     ["store"]);
+    // print("nearby points output:");
+    // print(nearbyPoints["points"]);
+
+    // Map addresses =
+    //     await RadarFlutterPlugin.geocode("20 Jay St, Brooklyn, NY, 11222");
+    // print(addresses["addresses"]);
+    // Map addressesR = await RadarFlutterPlugin.reverseGeocode(
+    //     {"latitude": 40.704103, "longitude": -73.987067});
+    // print(addressesR["addresses"]);
+    // Map ipAddress = await RadarFlutterPlugin.ipGeocode();
+    // print(ipAddress);
+
+    // Map addressesAutocomplete = await RadarFlutterPlugin.autocomplete(
+    //     "20 Jay", {"latitude": 40.7033, "longitude": -73.986});
+    // print(addressesAutocomplete);
+
+    // Map distance = await RadarFlutterPlugin.getDistance(
+    //     {"latitude": 40.70390, "longitude": -73.98670},
+    //     ["CAR", "BIKE"],
+    //     "METRIC",
+    //     {"latitude": 40.7033, "longitude": -73.986});
+    // print(distance);
+
+    // Map<String, String> tripOptions = {
+    //   "externalId": "flutterTripAB",
+    //   "destinationGeofenceTag": "store",
+    //   "destinationGeofenceExternalId": "123",
+    //   "mode": "car"
+    // };
+    // RadarFlutterPlugin.startTrip(tripOptions);
+    // Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
+    // print(currentTripOptions);
   }
 
   @override
@@ -67,14 +126,24 @@ class _MyAppState extends State<MyApp> {
       ),
       body: Container(
         child: Column(children: [
-          // Text('User Location permissions: $_permissionStatus\n'),
-          // child: locationPermissions(),
           LocationPermissions(),
           TrackOnce(),
           RaisedButton(
             color: Colors.blueAccent,
             onPressed: () {
-              RadarFlutterPlugin.startTracking('continuous');
+              // RadarFlutterPlugin.startTracking('continuous');
+              Map<String, dynamic> trackingOptions = {
+                "desiredStoppedUpdateInterval": 180,
+                "desiredMovingUpdateInterval": 60,
+                "desiredSyncInterval": 50,
+                "desiredAccuracy": 'high',
+                "stopDuration": 140,
+                "stopDistance": 70,
+                "sync": 'all',
+                "replay": 'none',
+                "showBlueBar": true
+              };
+              RadarFlutterPlugin.startTrackingCustom(trackingOptions);
               showAlertDialog(context, 'now tracking continuously');
             },
             child: Text("StartTracking"),
@@ -115,42 +184,6 @@ class LocationPermissions extends StatefulWidget {
   _LocationPermissionsState createState() => _LocationPermissionsState();
 }
 
-// String _permissionStatus = 'Unknown';
-
-// @override
-// void initState() {
-//   super.initState();
-//   initHomeState();
-// }
-
-// // Platform messages are asynchronous, so we initialize in an async method.
-// Future<void> initHomeState() async {
-//   String permissionStatus;
-//   Map locationState;
-//   // Platform messages may fail, so we use a try/catch PlatformException.
-//   try {
-//     permissionStatus = await RadarFlutterPlugin.permissionsStatus;
-//   } on PlatformException {
-//     permissionStatus = 'Failed to get permissions.';
-//   }
-
-//   try {
-//     locationState = await RadarFlutterPlugin.trackOnce();
-//     developer.log(locationState['user']['_id'], name: 'radar user id');
-//   } on PlatformException {
-//     developer.log('issue with trackOnce', name: 'radar');
-//   }
-
-//   // If the widget was removed from the tree while the asynchronous platform
-//   // message was in flight, we want to discard the reply rather than calling
-//   // setState to update our non-existent appearance.
-//   if (!mounted) return;
-
-//   setState(() {
-//     _permissionStatus = permissionStatus;
-//   });
-// }
-
 class _LocationPermissionsState extends State<LocationPermissions> {
   String _permissionStatus = 'Unknown';
 
@@ -181,8 +214,6 @@ class _LocationPermissionsState extends State<LocationPermissions> {
 
   // this private method is run whenever the button is pressed
   Future _getPermissionsStatus() async {
-    // Using the callback State.setState() is the only way to get the build
-    // method to rerun with the updated state value.
     String permissionsString = await RadarFlutterPlugin.permissionsStatus();
     setState(() {
       _permissionStatus = permissionsString;
@@ -213,10 +244,6 @@ class _TrackOnceState extends State<TrackOnce> {
     Widget okButton = FlatButton(
       child: Text("OK"),
       onPressed: () {
-        // This closes the dialog. `context` means the BuildContext, which is
-        // available by default inside of a State object. If you are working
-        // with an AlertDialog in a StatelessWidget, then you would need to
-        // pass a reference to the BuildContext.
         Navigator.pop(context);
       },
     );
@@ -266,9 +293,3 @@ showAlertDialog(BuildContext context, String textDisplay) {
     },
   );
 }
-
-// to figure out event sink
-
-// location.onLocationChanged.listen((LocationData currentLocation) {
-//   // Use current location
-// });

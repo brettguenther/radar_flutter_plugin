@@ -16,14 +16,17 @@ Flutter support:
 
 ## Features
 
-* user ID and metadata setting
-* Implementation of TrackOnce (get updated user state information at a desired point in the app lifecycle)
-* Support for different background tracking presets and customization.
+* User management
+* Geofencing
+* Geo APIs
+
 
 ## Planned features
-* Event Listeners
-* Additional Radar APIs (search,geocoding,context,distance)
-* Support for trip tracking
+* Location permission change listening
+* fg service creation
+* Trip tracking
+* Mock tracking
+* Accept/reject events
 
 ## Setup
 ### Change the minSdkVersion for Android

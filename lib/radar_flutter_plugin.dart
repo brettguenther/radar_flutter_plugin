@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 class RadarFlutterPlugin {
@@ -178,9 +179,12 @@ class RadarFlutterPlugin {
     }
   }
 
-  // static Future<Map> getContext([Map<String, dynamic> location]) async {}
-  static Future<Map> searchGeofences(Map<String, dynamic> near,
-      [int radius, int limit, List tags, Map<String, dynamic> metadata]) async {
+  static Future<Map> searchGeofences(
+      [Map<String, dynamic> near,
+      int radius,
+      int limit,
+      List tags,
+      Map<String, dynamic> metadata]) async {
     try {
       final Map searchGeofencesResult =
           await _channel.invokeMethod('searchGeofences', <String, dynamic>{
@@ -199,13 +203,185 @@ class RadarFlutterPlugin {
     }
   }
 
-  // static clientLocation(Function(Map<dynamic, dynamic> result) resultProcess) {
-  //   _channel.setMethodCallHandler((MethodCall methodCall) async {
-  //     if (methodCall.method == "clientLocation") {
-  //       Map resultData = Map.from(methodCall.arguments);
-  //       resultProcess(resultData);
-  //     }
-  //   });
+  static Future<Map> searchPlaces(Map<String, dynamic> near,
+      [int radius,
+      int limit,
+      List chains,
+      List categories,
+      List groups]) async {
+    try {
+      final Map searchPlacesResult =
+          await _channel.invokeMethod('searchPlaces', <String, dynamic>{
+        "near": near,
+        "radius": radius,
+        "limit": limit,
+        "chains": chains,
+        "catgories": categories,
+        "groups": groups
+      });
+      return searchPlacesResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> searchError = {'error': e.code};
+      return searchError;
+    }
+  }
+
+  static Future<Map> searchPoints(
+      [Map<String, dynamic> near, int radius, int limit, List tags]) async {
+    try {
+      final Map searchPointsResult = await _channel.invokeMethod(
+          'searchPoints', <String, dynamic>{
+        "near": near,
+        "radius": radius,
+        "limit": limit,
+        "tags": tags
+      });
+      return searchPointsResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> searchError = {'error': e.code};
+      return searchError;
+    }
+  }
+
+  static Future<Map> getContext([Map<String, dynamic> location]) async {
+    try {
+      if (location == null) {
+        final Map contextResult = await _channel.invokeMethod('getContext');
+        return contextResult;
+      } else {
+        final Map contextResult =
+            await _channel.invokeMethod('getContext', {"location": location});
+        return contextResult;
+      }
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> contextError = {'error': e.code};
+      return contextError;
+    }
+  }
+
+  static Future<Map> autocomplete(String query, Map<String, dynamic> near,
+      [int limit]) async {
+    try {
+      final Map autocompleteResult = await _channel.invokeMethod('autocomplete',
+          <String, dynamic>{"query": query, "near": near, "limit": limit});
+      return autocompleteResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> autocompleteError = {'error': e.code};
+      return autocompleteError;
+    }
+  }
+
+  static Future<Map> geocode(String query) async {
+    try {
+      final Map geocodeResult = await _channel
+          .invokeMethod('forwardGeocode', <String, String>{"query": query});
+      return geocodeResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> geocodeError = {'error': e.code};
+      return geocodeError;
+    }
+  }
+
+  static Future<Map> reverseGeocode([Map<String, dynamic> location]) async {
+    try {
+      final Map geocodeResult = await _channel.invokeMethod(
+          'reverseGeocode', <String, dynamic>{"location": location});
+      return geocodeResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> geocodeError = {'error': e.code};
+      return geocodeError;
+    }
+  }
+
+  static Future<Map> ipGeocode() async {
+    try {
+      final Map geocodeResult = await _channel.invokeMethod('ipGeocode');
+      return geocodeResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> geocodeError = {'error': e.code};
+      return geocodeError;
+    }
+  }
+
+  static Future<Map> getDistance(
+      Map<String, double> destination, List modes, String units,
+      [Map<String, double> origin]) async {
+    try {
+      if (origin == null) {
+        final Map distanceResult = await _channel.invokeMethod(
+            'getDistance', <String, dynamic>{
+          "destination": destination,
+          "modes": modes,
+          "units": units
+        });
+        return distanceResult;
+      } else {
+        final Map distanceResult = await _channel.invokeMethod(
+            'getDistance', <String, dynamic>{
+          "origin": origin,
+          "destination": destination,
+          "modes": modes,
+          "units": units
+        });
+        return distanceResult;
+      }
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> distanceError = {'error': e.code};
+      return distanceError;
+    }
+  }
+
+  // static Future startTrip(Map<String, dynamic> tripOptions) async {
+  //   try {
+  //     await _channel.invokeMethod('startTrip', tripOptions);
+  //   } on PlatformException catch (e) {
+  //     print("Got error: $e");
+  //   }
+  // }
+
+  // static Future<Map> getTripOptions() async {
+  //   final Map tripOptions = await _channel.invokeMethod('getTripOptions');
+  //   return tripOptions;
+  // }
+
+  // static Future completeTrip() async {
+  //   try {
+  //     await _channel.invokeMethod('completeTrip');
+  //   } on PlatformException catch (e) {
+  //     print("Got error: $e");
+  //   }
+  // }
+
+  // static Future cancelTrip() async {
+  //   try {
+  //     await _channel.invokeMethod('cancelTrip');
+  //   } on PlatformException catch (e) {
+  //     print("Got error: $e");
+  //   }
+  // }
+
+  // static Future<Map> mockTracking(
+  //     Map<String, dynamic> origin,
+  //     Map<String, dynamic> destination,
+  //     List mode,
+  //     int steps,
+  //     int interval) async {
+  //   try {
+  //     final Map mockTrackResult = await _channel.invokeMethod('mockTrack');
+  //     return mockTrackResult;
+  //   } on PlatformException catch (e) {
+  //     print("Got error: $e");
+  //     Map<String, String> mockTrackError = {'error': e.code};
+  //     return mockTrackError;
+  //   }
   // }
 
   static startListeners() {
@@ -234,33 +410,36 @@ class RadarFlutterPlugin {
     });
   }
 
-  // static location(Function(Map<String, dynamic> result) result) {}
-  // static error(Function(Map<String, dynamic> result) result) {}
-  // static events(Function(Map<String, dynamic> result) result) {}
-
   static onClientLocation(
       Function(Map<dynamic, dynamic> result) resultProcess) {
     _clientLocationHandler = resultProcess;
+  }
+
+  static offClientLocation() {
+    _clientLocationHandler = null;
   }
 
   static onEvents(Function(Map<dynamic, dynamic> result) resultProcess) {
     _eventHandler = resultProcess;
   }
 
+  static offEvents() {
+    _eventHandler = null;
+  }
+
   static onLocation(Function(Map<dynamic, dynamic> result) resultProcess) {
     _locationHandler = resultProcess;
+  }
+
+  static offLocation() {
+    _locationHandler = null;
   }
 
   static onError(Function(Map<dynamic, dynamic> result) resultProcess) {
     _errorHandler = resultProcess;
   }
 
-  // static Future<Null> _handleMethod(MethodCall call) async {
-  //   print("handling method call");
-  //   Map resultData = Map.from(call.arguments);
-  //   if (call.method == "clientLocation") {
-  //     _clientLocationHandler(resultData);
-  //   }
-  //   return null;
-  // }
+  static offError() {
+    _errorHandler = null;
+  }
 }
