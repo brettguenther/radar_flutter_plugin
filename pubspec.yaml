@@ -1,8 +1,7 @@
 name: radar_flutter_plugin
-description: A new flutter plugin project.
+description: Use Radar SDKs and APIs to add location context to your apps with just a few lines of code.
 version: 0.0.1
-author: brettguenther
-homepage:
+homepage: https://github.com/brettguenther/radar_flutter_plugin
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
