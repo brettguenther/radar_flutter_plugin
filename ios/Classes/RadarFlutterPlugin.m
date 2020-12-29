@@ -29,10 +29,7 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-    if ([@"initialize" isEqualToString:call.method]) {
-      [self initialize:call withResult:result];
-    }
-    else if ([@"getPermissionsStatus" isEqualToString:call.method]) {
+    if ([@"getPermissionsStatus" isEqualToString:call.method]) {
       [self getPermissionsStatus:result];
     }
     else if ([@"setLogLevel" isEqualToString:call.method]) {
@@ -100,7 +97,7 @@
         double accuracy = accuracyNumber ? [accuracyNumber doubleValue] : -1;
         CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:-1 horizontalAccuracy:accuracy verticalAccuracy:-1 timestamp:[NSDate date]];
         [Radar trackOnceWithLocation:location completionHandler:completionHandler];
-      } else {        
+      } else {
         [Radar trackOnceWithCompletionHandler:completionHandler];
       }
     }
@@ -155,7 +152,7 @@
     }
     else if ([@"getDistance" isEqualToString:call.method]) {
       [self getDistance:call withResult:result];
-    // }
+    }
     // else if ([@"startTrip" isEqualToString:call.method]) {
     //   NSDictionary *optionsDict = call.arguments;
     //   NSMutableDictionary *mutableDict = [NSMutableDictionary new];
@@ -228,12 +225,6 @@
     else {
       result(FlutterMethodNotImplemented);
     }
-}
-
-- (void) initialize:(FlutterMethodCall *)call withResult:(FlutterResult)result {
-    NSString *publishableKey = call.arguments[@"publishableKey"];
-    [Radar initializeWithPublishableKey:publishableKey];
-    result(nil);
 }
 
 - (void) getPermissionsStatus:(FlutterResult)result {
@@ -384,7 +375,7 @@
     double accuracy = accuracyNumber ? [accuracyNumber doubleValue] : -1;
     CLLocation *location = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:-1 horizontalAccuracy:accuracy verticalAccuracy:-1 timestamp:[NSDate date]];
     [Radar getContextForLocation:location completionHandler:completionHandler];
-  } else {        
+  } else {
     [Radar getContextWithCompletionHandler:completionHandler];
   }
 }
@@ -712,3 +703,5 @@
 }
 
 @end
+
+

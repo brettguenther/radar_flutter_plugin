@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 
 class RadarFlutterPlugin {
