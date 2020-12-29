@@ -67,10 +67,56 @@ In the **android/app/src/main/AndroidManifest.xml** let’s add:
         </receiver>
 ```
 
+### Add MainApplication
+ Open the `MainApplication` class for your project. **Note that `MainApplication`
+is not created by default through `flutter create <Project>`, so you may need to
+create it**. Add code to extend the Flutter Application class
+(`FlutterApplication`) that imports and initializes Reader SDK:
+
+    ```java
+    package <YOUR_PACKAGE_NAME>;
+
+import io.flutter.app.FlutterApplication;
+import io.flutter.view.FlutterMain;
+import io.radar.sdk.Radar;
+
+public class MainApplication extends FlutterApplication {
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Radar.initialize(this,"<yourRadarPublishableKey>");
+        FlutterMain.startInitialization(this);
+    }
+
+}
+    ```
+
+If you create `MainApplication` class in above step, update `AndroidManifest.xml` in your project:
+    ```xml
+      <application
+        <!-- use custom "MainApplication" class instead of "io.flutter.app.FlutterApplication" -->
+        android:name=".MainApplication" 
+        ... />
+      </application>
+    ```
+
+In `MainActivity` you might need the following engine registration:
+```java
+public class MainActivity extends FlutterActivity {
+    @Override
+    public void configureFlutterEngine(FlutterEngine flutterEngine) {
+        GeneratedPluginRegistrant.registerWith(flutterEngine);
+    }
+}
+```
+
 #### **IOS**
+
+### adjust plist
 In the **ios/Runner/Info.plist** let’s add:
 
-```dart 
+```xml
 	<dict>  
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Your iOS 11 and higher background location usage description goes here. e.g., "This app uses your location in the background to recommend places nearby."</string>
@@ -83,6 +129,27 @@ In the **ios/Runner/Info.plist** let’s add:
       <string>fetch</string>
       <string>location</string>
     </array>
+  ...
+  </dict>
+```
+
+### initialize Radar in appDelegate
+
+```objective-c
+package <YOUR_PACKAGE_NAME>;
+
+import io.flutter.app.FlutterApplication;
+import io.flutter.view.FlutterMain;
+import io.radar.sdk.Radar;
+
+public class MainApplication extends FlutterApplication {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Radar.initialize(this,"<yourRadarPublishableKey>");
+        FlutterMain.startInitialization(this);
+    }
+}
 ```
 
 For location permissions on iOS see more at: [https://developer.apple.com/documentation/corelocation/requesting_authorization_for_location_services](https://developer.apple.com/documentation/corelocation/requesting_authorization_for_location_services)

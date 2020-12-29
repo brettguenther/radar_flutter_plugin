@@ -124,9 +124,6 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     public void onMethodCall(@NonNull MethodCall call, @NonNull final Result result) {
         try {
             switch (call.method) {
-                case "initialize":
-                    initialize(call, result);
-                    break;
                 case "getPermissionsStatus":
                     getPermissionStatus(result);
                     break;
@@ -238,12 +235,6 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
            }
         });
      }
-
-    private void initialize(MethodCall call, Result result) {
-        final String publishableKey = call.argument("publishableKey");
-        Radar.initialize(applicationContext,publishableKey);
-        result.success(true);
-    }
 
     private void getPermissionStatus(Result result) {
         boolean foreground = ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;

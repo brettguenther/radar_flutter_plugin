@@ -14,16 +14,16 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initRadar();
+    setupRadar();
   }
 
-  Future<void> initRadar() async {
-    print("starting radar");
-    try {
-      await RadarFlutterPlugin.initialize("<yourPublishableKey>");
-    } on PlatformException catch (e) {
-      print(e.message);
-    }
+  Future<void> setupRadar() async {
+    // print("starting radar");
+    // try {
+    //   await RadarFlutterPlugin.initialize("<yourPublishableKey>");
+    // } on PlatformException catch (e) {
+    //   print(e.message);
+    // }
     RadarFlutterPlugin.setLogLevel("DEBUG");
     RadarFlutterPlugin.setUserId("flutter-uuid");
     RadarFlutterPlugin.setDescription("Flutter Example User");
