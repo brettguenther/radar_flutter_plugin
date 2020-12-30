@@ -74,7 +74,7 @@ class RadarFlutterPlugin {
     }
   }
 
-  static Future setMetadata(Map<String, String> metadata) async {
+  static Future setMetadata(Map<String, dynamic> metadata) async {
     try {
       await _channel.invokeMethod('setMetadata', metadata);
     } on PlatformException catch (e) {
@@ -338,34 +338,34 @@ class RadarFlutterPlugin {
     }
   }
 
-  // static Future startTrip(Map<String, dynamic> tripOptions) async {
-  //   try {
-  //     await _channel.invokeMethod('startTrip', tripOptions);
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  static Future startTrip(Map<String, dynamic> tripOptions) async {
+    try {
+      await _channel.invokeMethod('startTrip', tripOptions);
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
-  // static Future<Map> getTripOptions() async {
-  //   final Map tripOptions = await _channel.invokeMethod('getTripOptions');
-  //   return tripOptions;
-  // }
+  static Future<Map> getTripOptions() async {
+    final Map tripOptions = await _channel.invokeMethod('getTripOptions');
+    return tripOptions;
+  }
 
-  // static Future completeTrip() async {
-  //   try {
-  //     await _channel.invokeMethod('completeTrip');
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  static Future completeTrip() async {
+    try {
+      await _channel.invokeMethod('completeTrip');
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
-  // static Future cancelTrip() async {
-  //   try {
-  //     await _channel.invokeMethod('cancelTrip');
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  static Future cancelTrip() async {
+    try {
+      await _channel.invokeMethod('cancelTrip');
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
   // static Future<Map> mockTracking(
   //     Map<String, dynamic> origin,

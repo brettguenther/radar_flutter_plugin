@@ -193,18 +193,18 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 case "getDistance":
                     getDistance(call,result);
                     break;
-                // case "startTrip":
-                //     startTrip(call,result);
-                //     break;
-                // case "getTripOptions":
-                //     getTripOptions(result);
-                //     break;
-                // case "completeTrip":
-                //     completeTrip(result);
-                //     break;
-                // case "cancelTrip":
-                //     cancelTrip(result);
-                //     break;
+                case "startTrip":
+                    startTrip(call,result);
+                    break;
+                case "getTripOptions":
+                    getTripOptions(result);
+                    break;
+                case "completeTrip":
+                    completeTrip(result);
+                    break;
+                case "cancelTrip":
+                    cancelTrip(result);
+                    break;
                 // case "mockTracking":
                 //     mockTracking(call,result);
                 //     break;
@@ -749,33 +749,33 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         }
     }
 
-    // public void startTrip(MethodCall call,Result result) {
-    //     final HashMap tripOptionsMap = (HashMap) call.arguments;
-    //     JSONObject tripOptionsJson = null;
-    //     try {
-    //         tripOptionsJson = getJsonFromTripOptionsMap(tripOptionsMap);
-    //     } catch (JSONException e) {
-    //         e.printStackTrace();
-    //     }
-    //     RadarTripOptions options = RadarTripOptions.fromJson(tripOptionsJson);
-    //     Radar.startTrip(options);
-    //     result.success(true);
-    // }
+    public void startTrip(MethodCall call,Result result) {
+        final HashMap tripOptionsMap = (HashMap) call.arguments;
+        JSONObject tripOptionsJson = null;
+        try {
+            tripOptionsJson = getJsonFromTripOptionsMap(tripOptionsMap);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        RadarTripOptions options = RadarTripOptions.fromJson(tripOptionsJson);
+        Radar.startTrip(options);
+        result.success(true);
+    }
 
-    // public void getTripOptions(Result result) {
-    //     RadarTripOptions options = Radar.getTripOptions();
-    //     result.success(options.toJson());
-    // }
+    public void getTripOptions(Result result) {
+        RadarTripOptions options = Radar.getTripOptions();
+        result.success(options.toJson());
+    }
 
-    // public void completeTrip(Result result) {
-    //     Radar.completeTrip();
-    //     result.success(true);
-    // }
+    public void completeTrip(Result result) {
+        Radar.completeTrip();
+        result.success(true);
+    }
 
-    // public void cancelTrip(Result result) {
-    //     Radar.cancelTrip();
-    //     result.success(true);
-    // }
+    public void cancelTrip(Result result) {
+        Radar.cancelTrip();
+        result.success(true);
+    }
 
     // public void mockTracking(MethodCall call,final Result result) {
 
@@ -836,7 +836,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     private JSONObject getJsonFromTripOptionsMap(HashMap map) throws JSONException {
         JSONObject jsonData = new JSONObject();
         jsonData.put("destinationGeofenceExternalId",map.get("destinationGeofenceExternalId"));
-        jsonData.put("destinationGeofenceTag",map.get("destinationGeofenceExternalId"));
+        jsonData.put("destinationGeofenceTag",map.get("destinationGeofenceTag"));
         jsonData.put("externalId",map.get("externalId"));
         if (map.containsKey("metadata")) {
             Map<String, Object> metadata = (Map<String, Object>) map.get("metadata");

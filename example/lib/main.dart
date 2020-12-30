@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:flutter/services.dart';
 import 'package:radar_flutter_plugin/radar_flutter_plugin.dart';
 
 void main() => runApp(MyApp());
@@ -44,7 +43,7 @@ class _MyAppState extends State<MyApp> {
     });
     RadarFlutterPlugin.startListeners();
 
-    Map<String, String> metadata = {"mKey": "mValue"};
+    Map<String, dynamic> metadata = {"mKey": "mValue", "isActivated": true};
     RadarFlutterPlugin.setMetadata(metadata);
     Map userMetadata = await RadarFlutterPlugin.getMetadata();
     print("current metadata: ");
@@ -106,15 +105,16 @@ class _MyAppState extends State<MyApp> {
     //     {"latitude": 40.7033, "longitude": -73.986});
     // print(distance);
 
-    // Map<String, String> tripOptions = {
-    //   "externalId": "flutterTripAB",
-    //   "destinationGeofenceTag": "store",
-    //   "destinationGeofenceExternalId": "123",
-    //   "mode": "car"
-    // };
-    // RadarFlutterPlugin.startTrip(tripOptions);
-    // Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
-    // print(currentTripOptions);
+    Map<String, dynamic> tripOptions = {
+      "externalId": "flutterTrip8",
+      "destinationGeofenceTag": "store",
+      "destinationGeofenceExternalId": "123",
+      "mode": "car"
+      // ,"metadata": {"Name": "Rob", "CarType": "SUV"}
+    };
+    RadarFlutterPlugin.startTrip(tripOptions);
+    Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
+    print(currentTripOptions);
   }
 
   @override
