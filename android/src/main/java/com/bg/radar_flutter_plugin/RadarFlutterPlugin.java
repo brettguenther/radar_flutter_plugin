@@ -5,7 +5,9 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -57,6 +59,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     private Registrar registrar;
 
     private Context applicationContext;
+    private BroadcastReceiver radarFlutterReceiver;
 
 //    private void setContext(Context context) {
 //        this.applicationContext = context;
@@ -88,12 +91,14 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
 
     @Override
     public void onDetachedFromActivity() {
-//        setActivity(null);
+    //    setActivity(null);
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        // see https://github.com/FirebaseExtended/flutterfire/pull/2605
         channel.setMethodCallHandler(null);
+        applicationContext.unregisterReceiver(radarFlutterReceiver);
     }
 
     @Override
@@ -101,6 +106,10 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "radar_flutter_plugin");
         channel.setMethodCallHandler(this);
         applicationContext = flutterPluginBinding.getApplicationContext();
+        radarFlutterReceiver = new RadarFlutterReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("io.radar.sdk.RECEIVED");
+        applicationContext.registerReceiver(radarFlutterReceiver,filter);
     }
 
     // This static function is optional and equivalent to onAttachedToEngine. It supports the old

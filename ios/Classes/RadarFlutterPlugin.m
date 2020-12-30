@@ -688,7 +688,6 @@
 }
 
 - (void)didUpdateClientLocation:(CLLocation *)location stopped:(BOOL)stopped source:(RadarLocationSource)source {
-    NSLog(@"did update client location");
   NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"stopped": @(stopped), @"source": [Radar stringForSource:source]};
   [_channel invokeMethod:@"onClientLocation" arguments:dict];
 }
