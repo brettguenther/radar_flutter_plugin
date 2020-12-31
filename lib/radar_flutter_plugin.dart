@@ -6,10 +6,12 @@ class RadarFlutterPlugin {
   static const MethodChannel _channel =
       const MethodChannel('radar_flutter_plugin');
 
+  // event handlers
   static Function(Map result) _clientLocationHandler;
   static Function(Map result) _eventHandler;
   static Function(Map result) _locationHandler;
   static Function(Map result) _errorHandler;
+  static Function(Map result) _logHandler;
 
   // RadarFlutterPlugin() {
   //   RadarFlutterPlugin._channel
@@ -18,6 +20,9 @@ class RadarFlutterPlugin {
 
   // static RadarFlutterPlugin shared = new RadarFlutterPlugin();
 
+  /// initialize publishable key
+  /// for background location tracking it is valuable to initialize in the native code rather than in dart
+  /// accepts a string publishable key which can be accessed from your Radar dashboard
   static Future initialize(String publishableKey) async {
     var params = <String, String>{
       'publishableKey': publishableKey,
@@ -29,12 +34,15 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// gets location permission status
   static Future<String> permissionsStatus() async {
     final String permissionsStatus =
         await _channel.invokeMethod('getPermissionsStatus');
     return permissionsStatus;
   }
 
+  /// sets the Radar log level
+  /// options are DEBUG, WARNING, ERROR and INFO
   static Future setLogLevel(String logLevel) async {
     try {
       await _channel.invokeMethod('setLogLevel', {"logLevel": logLevel});
@@ -43,6 +51,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// request location permissions
+  /// required input is a boolean if you should request foreground or background
   static Future requestPermissions(bool background) async {
     try {
       await _channel
@@ -52,6 +62,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// set external user id for the given device
+  /// required input is a string
   static Future setUserId(String userId) async {
     try {
       await _channel.invokeMethod('setUserId', {"userId": userId});
@@ -60,11 +72,14 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// get current external user id
   static Future<String> getUserId() async {
     final String userId = await _channel.invokeMethod('getUserId');
     return userId;
   }
 
+  /// set the description for the given device
+  /// required input is a string
   static Future setDescription(String description) async {
     try {
       await _channel
@@ -74,7 +89,11 @@ class RadarFlutterPlugin {
     }
   }
 
-  static Future setMetadata(Map<String, String> metadata) async {
+  /// set the metadata
+  /// required input is a Map of key value pairs
+  /// alphabet and underscore allowed characters for keys
+  /// string,numeric and booleans allowed for values
+  static Future setMetadata(Map<String, dynamic> metadata) async {
     try {
       await _channel.invokeMethod('setMetadata', metadata);
     } on PlatformException catch (e) {
@@ -82,11 +101,31 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// get the current description
   static Future<String> getDecription() async {
     final String description = await _channel.invokeMethod('getDescription');
     return description;
   }
 
+  /// get the user location
+  /// optional string for desired accuracy (higher accuracy requested = slower response)
+  /// values accepted for accuracy are low, medium and high
+  /// default accuracy is medium (wifi scanning 10-100m)
+  static Future<Map> getLocation([String accuracy]) async {
+    try {
+      final Map locationResult =
+          await _channel.invokeMethod('getLocation', {"accuracy": accuracy});
+      return locationResult;
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+      Map<String, String> locationError = {'error': e.code};
+      return locationError;
+    }
+  }
+
+  /// get current context for the device (current geofences)
+  /// optionally pass in a location (latitude,longitude and accuracy are required)
+  /// if no location is passed, method will get current device location at medium accuracy
   static Future<Map> trackOnce([Map<String, dynamic> location]) async {
     try {
       if (location == null) {
@@ -104,6 +143,9 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// start ongoing location tracking with a Radar tracking preset
+  /// options for the preset are efficient, continuous and responsive
+  /// defaults to responsive
   static Future startTracking(String preset) async {
     var params = <String, String>{
       'preset': preset,
@@ -115,6 +157,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// start ongoing tracking with your own tracking options passed in as a map
+  /// see here for options: https://radar.io/documentation/sdk/tracking
   static Future startTrackingCustom(
       Map<String, dynamic> trackingOptions) async {
     try {
@@ -124,6 +168,7 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// stop ongoing tracking
   static Future stopTracking() async {
     try {
       await _channel.invokeMethod('stopTracking');
@@ -132,6 +177,7 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// check if ongoing tracking is on
   static Future<bool> isTracking() async {
     final bool isTracking = await _channel.invokeMethod('isTracking');
     return isTracking;
@@ -164,11 +210,14 @@ class RadarFlutterPlugin {
   //   }
   // }
 
+  /// get current device's metadata
   static Future<Map> getMetadata() async {
     final Map metadata = await _channel.invokeMethod('getMetadata');
     return metadata;
   }
 
+  /// set if the advertising id should be collected (will not explicitly request but collect if present)
+  /// specific to iOS
   static Future setAdIdEnabled(bool adIdEnabled) async {
     try {
       await _channel
@@ -178,12 +227,10 @@ class RadarFlutterPlugin {
     }
   }
 
-  static Future<Map> searchGeofences(
-      [Map<String, dynamic> near,
-      int radius,
-      int limit,
-      List tags,
-      Map<String, dynamic> metadata]) async {
+  /// search nearby geofences
+  /// https://radar.io/documentation/api#search for information on parameters
+  static Future<Map> searchGeofences(Map<String, dynamic> near,
+      {int radius, int limit, List tags}) async {
     try {
       final Map searchGeofencesResult =
           await _channel.invokeMethod('searchGeofences', <String, dynamic>{
@@ -202,6 +249,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// search nearby places
+  /// https://radar.io/documentation/api#search for information on parameters
   static Future<Map> searchPlaces(Map<String, dynamic> near,
       [int radius,
       int limit,
@@ -226,6 +275,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// search nearby points
+  /// https://radar.io/documentation/api#search for information on parameters
   static Future<Map> searchPoints(
       [Map<String, dynamic> near, int radius, int limit, List tags]) async {
     try {
@@ -244,6 +295,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// get context (current geofences) with a stateless function
+  /// can pass in a location optionally (latitude and longitude) otherwise will request medium accuracy from the device
   static Future<Map> getContext([Map<String, dynamic> location]) async {
     try {
       if (location == null) {
@@ -261,6 +314,9 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// autocomplete a text string
+  /// near parameter biases results
+  /// https://radar.io/documentation/api#search for information on parameters
   static Future<Map> autocomplete(String query, Map<String, dynamic> near,
       [int limit]) async {
     try {
@@ -274,6 +330,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// forward geocode a string
+  /// https://radar.io/documentation/api#geocoding for more information on parameters
   static Future<Map> geocode(String query) async {
     try {
       final Map geocodeResult = await _channel
@@ -286,6 +344,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// reverse geocode a location (latitude and longitude as the two map keys)
+  /// https://radar.io/documentation/api#geocoding for more information on parameters
   static Future<Map> reverseGeocode([Map<String, dynamic> location]) async {
     try {
       final Map geocodeResult = await _channel.invokeMethod(
@@ -298,6 +358,8 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// ip geocode based on devices IP
+  /// https://radar.io/documentation/api#geocoding for more information
   static Future<Map> ipGeocode() async {
     try {
       final Map geocodeResult = await _channel.invokeMethod('ipGeocode');
@@ -309,6 +371,10 @@ class RadarFlutterPlugin {
     }
   }
 
+  /// get distance between two points (both distance and time and car,walk and bike modes)
+  /// origin is optional. if not provided will use current devices location.
+  /// mode options are foot,bike and car
+  /// pass in metric for units, otherwise it will be imperial
   static Future<Map> getDistance(
       Map<String, double> destination, List modes, String units,
       [Map<String, double> origin]) async {
@@ -338,34 +404,43 @@ class RadarFlutterPlugin {
     }
   }
 
-  // static Future startTrip(Map<String, dynamic> tripOptions) async {
-  //   try {
-  //     await _channel.invokeMethod('startTrip', tripOptions);
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  /// start a trip
+  /// tripOptions parameters are destinationGeofenceExternalId,destinationGeofenceTag and externalId
+  /// see here for more information: https://radar.io/documentation/trip-tracking
+  static Future startTrip(Map<String, dynamic> tripOptions) async {
+    try {
+      await _channel.invokeMethod('startTrip', tripOptions);
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
-  // static Future<Map> getTripOptions() async {
-  //   final Map tripOptions = await _channel.invokeMethod('getTripOptions');
-  //   return tripOptions;
-  // }
+  /// get current trip option set for device
+  /// see here for more information: https://radar.io/documentation/trip-tracking
+  static Future<Map> getTripOptions() async {
+    final Map tripOptions = await _channel.invokeMethod('getTripOptions');
+    return tripOptions;
+  }
 
-  // static Future completeTrip() async {
-  //   try {
-  //     await _channel.invokeMethod('completeTrip');
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  /// complete current trip
+  /// see here for more information: https://radar.io/documentation/trip-tracking
+  static Future completeTrip() async {
+    try {
+      await _channel.invokeMethod('completeTrip');
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
-  // static Future cancelTrip() async {
-  //   try {
-  //     await _channel.invokeMethod('cancelTrip');
-  //   } on PlatformException catch (e) {
-  //     print("Got error: $e");
-  //   }
-  // }
+  /// cancel current trip
+  /// see here for more information: https://radar.io/documentation/trip-tracking
+  static Future cancelTrip() async {
+    try {
+      await _channel.invokeMethod('cancelTrip');
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
 
   // static Future<Map> mockTracking(
   //     Map<String, dynamic> origin,
@@ -385,25 +460,28 @@ class RadarFlutterPlugin {
 
   static startListeners() {
     _channel.setMethodCallHandler((MethodCall methodCall) async {
-      print("in method call handler logic");
       if (methodCall.method == "onClientLocation" &&
           _clientLocationHandler != null) {
-        print("processing client location");
+        // print("processing client location");
         Map resultData = Map.from(methodCall.arguments);
         _clientLocationHandler(resultData);
       } else if (methodCall.method == "onEvents" && _eventHandler != null) {
-        print("processing events");
+        // print("processing events");
         Map resultData = Map.from(methodCall.arguments);
         _eventHandler(resultData);
       } else if (methodCall.method == "onLocation" &&
           _locationHandler != null) {
-        print("processing location");
+        // print("processing location");
         Map resultData = Map.from(methodCall.arguments);
         _locationHandler(resultData);
       } else if (methodCall.method == "onError" && _errorHandler != null) {
-        print("processing error");
+        // print("processing error");
         Map resultData = Map.from(methodCall.arguments);
         _errorHandler(resultData);
+      } else if (methodCall.method == "onLog" && _logHandler != null) {
+        // print("processing error");
+        Map resultData = Map.from(methodCall.arguments);
+        _logHandler(resultData);
       }
       return null;
     });
@@ -440,5 +518,13 @@ class RadarFlutterPlugin {
 
   static offError() {
     _errorHandler = null;
+  }
+
+  static onLog(Function(Map<dynamic, dynamic> result) resultProcess) {
+    _logHandler = resultProcess;
+  }
+
+  static offLog() {
+    _logHandler = null;
   }
 }

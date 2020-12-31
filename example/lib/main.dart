@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:flutter/services.dart';
 import 'package:radar_flutter_plugin/radar_flutter_plugin.dart';
 
 void main() => runApp(MyApp());
@@ -44,7 +43,7 @@ class _MyAppState extends State<MyApp> {
     });
     RadarFlutterPlugin.startListeners();
 
-    Map<String, String> metadata = {"mKey": "mValue"};
+    Map<String, dynamic> metadata = {"mKey": "mValue", "isActivated": true};
     RadarFlutterPlugin.setMetadata(metadata);
     Map userMetadata = await RadarFlutterPlugin.getMetadata();
     print("current metadata: ");
@@ -54,9 +53,9 @@ class _MyAppState extends State<MyApp> {
     //       "latitude": 40.704103,
     //       "longitude": -73.987067,
     //     },
-    //     5000,
-    //     5,
-    //     ["store"]);
+    //     radius: 5000,
+    //     limit: 5,
+    //     tags: ["store"]);
     // print("nearby geofences output:");
     // print(nearbyGeofences["geofences"]);
 
@@ -106,11 +105,12 @@ class _MyAppState extends State<MyApp> {
     //     {"latitude": 40.7033, "longitude": -73.986});
     // print(distance);
 
-    // Map<String, String> tripOptions = {
-    //   "externalId": "flutterTripAB",
+    // Map<String, dynamic> tripOptions = {
+    //   "externalId": "flutterTrip9",
     //   "destinationGeofenceTag": "store",
     //   "destinationGeofenceExternalId": "123",
     //   "mode": "car"
+    //   // ,"metadata": {"Name": "Rob", "CarType": "SUV"}
     // };
     // RadarFlutterPlugin.startTrip(tripOptions);
     // Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
@@ -144,7 +144,6 @@ class _MyAppState extends State<MyApp> {
                 "showBlueBar": true
               };
               RadarFlutterPlugin.startTrackingCustom(trackingOptions);
-              showAlertDialog(context, 'now tracking continuously');
             },
             child: Text("StartTracking"),
           ),
@@ -172,6 +171,14 @@ class _MyAppState extends State<MyApp> {
               });
             },
             child: Text("Track Once With Location"),
+          ),
+          RaisedButton(
+            color: Colors.blueAccent,
+            onPressed: () async {
+              Map location = await RadarFlutterPlugin.getLocation('high');
+              print(location);
+            },
+            child: Text("get Location"),
           )
         ]),
       ),

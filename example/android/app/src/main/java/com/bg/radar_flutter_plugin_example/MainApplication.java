@@ -9,7 +9,7 @@ public class MainApplication extends FlutterApplication {
     @Override
     public void onCreate() {
         super.onCreate();
-        Radar.initialize(this,"<yourRadarPublishableKey>");
+        Radar.initialize(this,"<YourRadarPublishableKey>");
         FlutterMain.startInitialization(this);
     }
 
