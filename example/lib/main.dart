@@ -106,7 +106,7 @@ class _MyAppState extends State<MyApp> {
     // print(distance);
 
     Map<String, dynamic> tripOptions = {
-      "externalId": "flutterTrip8",
+      "externalId": "flutterTrip9",
       "destinationGeofenceTag": "store",
       "destinationGeofenceExternalId": "123",
       "mode": "car"
@@ -144,7 +144,6 @@ class _MyAppState extends State<MyApp> {
                 "showBlueBar": true
               };
               RadarFlutterPlugin.startTrackingCustom(trackingOptions);
-              showAlertDialog(context, 'now tracking continuously');
             },
             child: Text("StartTracking"),
           ),
@@ -172,6 +171,13 @@ class _MyAppState extends State<MyApp> {
               });
             },
             child: Text("Track Once With Location"),
+          ),
+          RaisedButton(
+            color: Colors.blueAccent,
+            onPressed: () {
+              RadarFlutterPlugin.getLocation('high');
+            },
+            child: Text("get Location"),
           )
         ]),
       ),

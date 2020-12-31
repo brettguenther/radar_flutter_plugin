@@ -148,6 +148,9 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 case "getDescription":
                     getDescription(result);
                     break;
+                case "getlocation":
+                    getLocation(call, result);
+                    break;
                 case "trackOnce":
                     trackOnce(call, result);
                     break;
@@ -316,6 +319,50 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         result.success(currentDescription);
     }
 
+    private void getLocation(MethodCall call, Result result) {
+        Radar.RadarLocationCallback callback = new Radar.RadarLocationCallback() {
+            @Override
+            public void onComplete(final Radar.RadarStatus status, final Location location, final boolean stopped) {
+                runOnMainThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        JSONObject obj = new JSONObject();
+                        obj.put("status", status.toString());
+                        if (location != null) {
+                            obj.put("location", Radar.jsonForLocation(location));
+                        }
+                        obj.put("stopped", stopped);
+                        HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                        result.success(hObj);
+                    } catch (JSONException e) {
+                        result.error("GET_LOCATION_ERROR", "An unexpected error happened during the location callback logic" + e.getMessage(), null);
+                    }
+                }
+            });
+        }
+        };
+        final String accuracy = call.argument("accuracy");
+        if (accuracy != nil) {
+            switch (accuracy) {
+                case "high":
+                    Radar.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,callback);
+                    break;
+                case "medium":
+                    Radar.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,callback);
+                    break;
+                case "low":
+                    Radar.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW,callback);
+                    break;
+                default:
+                    Radar.getLocation(callback);
+                    break;
+            }
+        } else {
+            Radar.getLocation(callback);
+        }
+    }
+
     private void trackOnce(MethodCall call, final Result result) {
         Radar.RadarTrackCallback callback = new Radar.RadarTrackCallback() {
             @Override
@@ -368,7 +415,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                 Radar.startTracking(RadarTrackingOptions.RESPONSIVE);
                 break;
             default:
-                Radar.startTracking(RadarTrackingOptions.EFFICIENT);
+                Radar.startTracking(RadarTrackingOptions.RESPONSIVE);
                 break;
         }
         result.success(true);
@@ -920,6 +967,14 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     
         @Override
         public void onLog(Context context,String message) {
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put("message", message);
+                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
+                RadarFlutterPlugin.channel.invokeMethod("onLog",hObj);
+            } catch (JSONException e) {
+                Log.d("RadarFlutterPlugin", "Error in log handling:  "  + e.getMessage());
+            }
         }
     }
 

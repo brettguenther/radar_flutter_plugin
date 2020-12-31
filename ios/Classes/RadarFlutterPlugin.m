@@ -70,6 +70,9 @@
     else if ([@"getDescription" isEqualToString:call.method]) {
       result([Radar getDescription]);
     }
+    else if ([@"getLocation" isEqualToString:call.method]) {
+      [self getLocation:call withResult:result];
+    }
     else if ([@"trackOnce" isEqualToString:call.method]) {
       RadarTrackCompletionHandler completionHandler = ^(RadarStatus status, CLLocation *location, NSArray<RadarEvent *> *events, RadarUser *user) {
           if (status == RadarStatusSuccess) {
@@ -308,6 +311,39 @@
         break;
   }
   result(nil);
+}
+
+- (void)getLocation:(FlutterMethodCall *)call withResult:(FlutterResult)result {
+  RadarLocationCompletionHandler completionHandler = ^(RadarStatus status, CLLocation *location, BOOL stopped) {
+    NSMutableDictionary *dict = [NSMutableDictionary new];
+    [dict setObject:[Radar stringForStatus:status] forKey:@"status"];
+    if (location) {
+        [dict setObject:[Radar dictionaryForLocation:location] forKey:@"location"];
+    }
+    [dict setObject:@(stopped) forKey:@"stopped"];
+    result(dict);
+  };
+  NSString *accuracyString = call.arguments[@"accuracy"];
+  if (accuracyString != nil) {
+      NSArray *acccuracyOptions = @[@"low", @"medium", @"high"];
+      int setAccuracy = [acccuracyOptions indexOfObject:accuracyString];
+      switch (setAccuracy) {
+          case 0:
+            [Radar getLocationWithDesiredAccuracy:RadarTrackingOptionsDesiredAccuracyLow completionHandler:completionHandler];
+            break;
+          case 1:
+            [Radar getLocationWithDesiredAccuracy:RadarTrackingOptionsDesiredAccuracyMedium completionHandler:completionHandler];
+            break;
+          case 2:
+            [Radar getLocationWithDesiredAccuracy:RadarTrackingOptionsDesiredAccuracyHigh completionHandler:completionHandler];
+            break;
+          default:
+            [Radar getLocationWithDesiredAccuracy:RadarTrackingOptionsDesiredAccuracyMedium completionHandler:completionHandler];
+            break;
+      }
+  } else {
+    [Radar getLocationWithCompletionHandler:completionHandler];
+  }
 }
 
 - (void)searchGeofences:(FlutterMethodCall *)call withResult:(FlutterResult)result {
@@ -719,7 +755,8 @@
 }
 
 - (void)didLogMessage:(NSString *)message {
-    // NSLog(@"%@", message);
+  NSDictionary *dict = @{@"message": message};
+  [_channel invokeMethod:@"onLog" arguments:dict];
 }
 
 @end
