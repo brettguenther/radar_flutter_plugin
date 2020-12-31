@@ -229,12 +229,8 @@ class RadarFlutterPlugin {
 
   /// search nearby geofences
   /// https://radar.io/documentation/api#search for information on parameters
-  static Future<Map> searchGeofences(
-      [Map<String, dynamic> near,
-      int radius,
-      int limit,
-      List tags,
-      Map<String, dynamic> metadata]) async {
+  static Future<Map> searchGeofences(Map<String, dynamic> near,
+      {int radius, int limit, List tags}) async {
     try {
       final Map searchGeofencesResult =
           await _channel.invokeMethod('searchGeofences', <String, dynamic>{

@@ -21,9 +21,10 @@ Flutter support:
 * Geo APIs (geocoding, distance, autocomplete)
 * Search (geofences, points and places)
 * Location tracking and context (foreground and background)
+* Trip tracking
 
 ## Planned features
-* Trip tracking
+* Trip Tracking and geofence search metadata
 * Mock tracking
 * Accept/reject events
 
@@ -38,7 +39,7 @@ Android {
      minSdkVersion: 16
 ```
 #### **Add permissions for Location**
-We need to add the permission to access location:
+We need to add the permission to request location:
 
 In the **android/app/src/main/AndroidManifest.xml** let’s add:
 
@@ -54,10 +55,18 @@ In the **android/app/src/main/AndroidManifest.xml** let’s add:
  </manifest>
 ```
 
+#### add Radar SDK module to the app `build.gradle` file:
+
+```
+dependencies {
+     ...
+    implementation 'io.radar:sdk:3.0.9'
+}
+```
+
 #### **Add MainApplication**
- Open the `MainApplication` class for your project. **Note that `MainApplication`
-is not created by default through `flutter create <Project>`, so you may need to
-create it**. 
+ Open the `MainApplication` class for your project. **Note:** `MainApplication`
+is not created by default through `flutter create <Project>`, so you may need to create it. 
 
 Add code to extend the Flutter Application class
 (`FlutterApplication`) that imports and initializes Reader SDK:
@@ -102,7 +111,7 @@ public class MainActivity extends FlutterActivity {
 ### **IOS**
 
 #### **Add permissions for Location**
-In the **ios/Runner/Info.plist** let’s add:
+In the **ios/Runner/Info.plist** let’s add the following replacing the usage description strings content as appropriate:
 
 ```xml
 <dict>  
@@ -123,22 +132,55 @@ In the **ios/Runner/Info.plist** let’s add:
 
 For location permissions on iOS see more at: [https://developer.apple.com/documentation/corelocation/requesting_authorization_for_location_services](https://developer.apple.com/documentation/corelocation/requesting_authorization_for_location_services)
 
+
+#### **Change the target for iOS**
+
+The Radar SDK supports iOS 10 and higher. You might need to adjust the following if not already done:
+
+1. Adjust the `MinimumOSVersion` in `ios/Flutter/Flutter.framework/AppFrameworkInfo.plist`:
+
+```xml
+  <key>MinimumOSVersion</key>
+  <string>10.0</string>
+```
+
+2. Adjust your Podfile to define a global platform (`platform :ios, '10.0'`) and comment out use frameworks (`#  use_frameworks!`) if needed.
+
 #### **Initialize Radar**
 
+_objective-c example:_
+
 ```objective-c
-package <YOUR_PACKAGE_NAME>;
+#import <RadarSDK/RadarSDK.h>
 
-import io.flutter.app.FlutterApplication;
-import io.flutter.view.FlutterMain;
-import io.radar.sdk.Radar;
+@implementation AppDelegate
 
-public class MainApplication extends FlutterApplication {
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Radar.initialize(this,"<yourRadarPublishableKey>");
-        FlutterMain.startInitialization(this);
-    }
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+  [Radar initializeWithPublishableKey:@"yourRadarPublishableKey"];
+  [GeneratedPluginRegistrant registerWithRegistry:self];
+  // Override point for customization after application launch.
+  return [super application:application didFinishLaunchingWithOptions:launchOptions];
+}
+
+@end
+```
+
+_swift example:_
+
+```swift
+import RadarSDK
+
+@UIApplicationMain
+@objc class AppDelegate: FlutterAppDelegate {
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    Radar.initialize(publishableKey: "<yourRadarPublishableKey>")
+    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
 }
 ```
 

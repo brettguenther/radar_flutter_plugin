@@ -53,9 +53,9 @@ class _MyAppState extends State<MyApp> {
     //       "latitude": 40.704103,
     //       "longitude": -73.987067,
     //     },
-    //     5000,
-    //     5,
-    //     ["store"]);
+    //     radius: 5000,
+    //     limit: 5,
+    //     tags: ["store"]);
     // print("nearby geofences output:");
     // print(nearbyGeofences["geofences"]);
 
@@ -105,16 +105,16 @@ class _MyAppState extends State<MyApp> {
     //     {"latitude": 40.7033, "longitude": -73.986});
     // print(distance);
 
-    Map<String, dynamic> tripOptions = {
-      "externalId": "flutterTrip9",
-      "destinationGeofenceTag": "store",
-      "destinationGeofenceExternalId": "123",
-      "mode": "car"
-      // ,"metadata": {"Name": "Rob", "CarType": "SUV"}
-    };
-    RadarFlutterPlugin.startTrip(tripOptions);
-    Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
-    print(currentTripOptions);
+    // Map<String, dynamic> tripOptions = {
+    //   "externalId": "flutterTrip9",
+    //   "destinationGeofenceTag": "store",
+    //   "destinationGeofenceExternalId": "123",
+    //   "mode": "car"
+    //   // ,"metadata": {"Name": "Rob", "CarType": "SUV"}
+    // };
+    // RadarFlutterPlugin.startTrip(tripOptions);
+    // Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
+    // print(currentTripOptions);
   }
 
   @override
@@ -174,8 +174,9 @@ class _MyAppState extends State<MyApp> {
           ),
           RaisedButton(
             color: Colors.blueAccent,
-            onPressed: () {
-              RadarFlutterPlugin.getLocation('high');
+            onPressed: () async {
+              Map location = await RadarFlutterPlugin.getLocation('high');
+              print(location);
             },
             child: Text("get Location"),
           )
