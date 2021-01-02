@@ -229,17 +229,20 @@ class RadarFlutterPlugin {
 
   /// search nearby geofences
   /// https://radar.io/documentation/api#search for information on parameters
-  static Future<Map> searchGeofences(Map<String, dynamic> near,
-      {int radius, int limit, List tags}) async {
+  static Future<Map> searchGeofences(
+      {Map<String, dynamic> near,
+      int radius,
+      int limit,
+      List tags,
+      Map<String, dynamic> metadata}) async {
     try {
       final Map searchGeofencesResult =
           await _channel.invokeMethod('searchGeofences', <String, dynamic>{
         "near": near,
         "radius": radius,
         "limit": limit,
-        "tags": tags
-        // ,
-        // "metadata": metadata
+        "tags": tags,
+        "metadata": metadata
       });
       return searchGeofencesResult;
     } on PlatformException catch (e) {
@@ -252,11 +255,11 @@ class RadarFlutterPlugin {
   /// search nearby places
   /// https://radar.io/documentation/api#search for information on parameters
   static Future<Map> searchPlaces(Map<String, dynamic> near,
-      [int radius,
+      {int radius,
       int limit,
       List chains,
       List categories,
-      List groups]) async {
+      List groups}) async {
     try {
       final Map searchPlacesResult =
           await _channel.invokeMethod('searchPlaces', <String, dynamic>{
@@ -278,7 +281,7 @@ class RadarFlutterPlugin {
   /// search nearby points
   /// https://radar.io/documentation/api#search for information on parameters
   static Future<Map> searchPoints(
-      [Map<String, dynamic> near, int radius, int limit, List tags]) async {
+      {Map<String, dynamic> near, int radius, int limit, List tags}) async {
     try {
       final Map searchPointsResult = await _channel.invokeMethod(
           'searchPoints', <String, dynamic>{
@@ -405,7 +408,7 @@ class RadarFlutterPlugin {
   }
 
   /// start a trip
-  /// tripOptions parameters are destinationGeofenceExternalId,destinationGeofenceTag and externalId
+  /// tripOptions parameters are destinationGeofenceExternalId,destinationGeofenceTag, externalId and metadata
   /// see here for more information: https://radar.io/documentation/trip-tracking
   static Future startTrip(Map<String, dynamic> tripOptions) async {
     try {
