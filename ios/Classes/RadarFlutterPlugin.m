@@ -190,7 +190,7 @@
        } else {
            options.mode = RadarRouteModeCar;
        }
-        if (optionsDict[@"metadata"] != nil) {
+        if (optionsDict[@"metadata"] != [NSNull null]) {
             options.metadata = optionsDict[@"metadata"];
         }
         else {
@@ -375,13 +375,14 @@
         };
 
         CLLocation *near;
-        NSDictionary *nearDict = call.arguments[@"near"];
-        if (nearDict != nil) {
-            NSNumber *latitudeNumber = nearDict[@"latitude"];
-            NSNumber *longitudeNumber = nearDict[@"longitude"];
-            double latitude = [latitudeNumber doubleValue];
-            double longitude = [longitudeNumber doubleValue];
-            near = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:-1 horizontalAccuracy:5 verticalAccuracy:-1 timestamp:[NSDate date]];
+        if (call.arguments[@"near"] != [NSNull null]) {
+          NSLog(@"not nill near dict");
+          NSDictionary *nearDict = call.arguments[@"near"];
+          NSNumber *latitudeNumber = nearDict[@"latitude"];
+          NSNumber *longitudeNumber = nearDict[@"longitude"];
+          double latitude = [latitudeNumber doubleValue];
+          double longitude = [longitudeNumber doubleValue];
+          near = [[CLLocation alloc] initWithCoordinate:CLLocationCoordinate2DMake(latitude, longitude) altitude:-1 horizontalAccuracy:5 verticalAccuracy:-1 timestamp:[NSDate date]];
         }
         NSNumber *radiusNumber = call.arguments[@"radius"];
         int radius;
@@ -394,7 +395,7 @@
         if (tags == [NSNull null]) {
           tags = nil;
         }
-        NSDictionary *metadata = nil;
+        
         NSNumber *limitNumber = call.arguments[@"limit"];
         int limit;
         if (limitNumber != nil && [limitNumber isKindOfClass:[NSNumber class]]) {
@@ -402,7 +403,10 @@
         } else {
             limit = 10;
         }
-
+        NSDictionary *metadata = nil;
+        if (call.arguments[@"metadata"] != [NSNull null]) {
+            metadata = call.arguments[@"metadata"];
+        }
         if (near != nil) {
             [Radar searchGeofencesNear:near radius:radius tags:tags metadata:metadata limit:limit completionHandler:completionHandler];
         } else {
@@ -453,8 +457,8 @@
   };
 
   CLLocation *near;
-  NSDictionary *nearDict = call.arguments[@"near"];
-  if (nearDict != nil) {
+  if (call.arguments[@"near"] != [NSNull null]) {
+      NSDictionary *nearDict = call.arguments[@"near"];
       NSNumber *latitudeNumber = nearDict[@"latitude"];
       NSNumber *longitudeNumber = nearDict[@"longitude"];
       double latitude = [latitudeNumber doubleValue];
@@ -487,7 +491,7 @@
   if (groups == [NSNull null]) {
     groups = nil;
   }
-  if (near) {
+  if (near != nil) {
       [Radar searchPlacesNear:near radius:radius chains:chains categories:categories groups:groups limit:limit completionHandler:completionHandler];
   } else {
       [Radar searchPlacesWithRadius:radius chains:chains categories:categories groups:groups limit:limit completionHandler:completionHandler];
@@ -510,8 +514,8 @@
   };
 
   CLLocation *near;
-  NSDictionary *nearDict = call.arguments[@"near"];
-  if (nearDict) {
+  if (call.arguments[@"near"] != [NSNull null]) {
+      NSDictionary *nearDict = call.arguments[@"near"];
       NSNumber *latitudeNumber = nearDict[@"latitude"];
       NSNumber *longitudeNumber = nearDict[@"longitude"];
       double latitude = [latitudeNumber doubleValue];
@@ -536,7 +540,7 @@
   } else {
       limit = 10;
   }
-  if (near) {
+  if (near != nil) {
       [Radar searchPointsNear:near radius:radius tags:tags limit:limit completionHandler:completionHandler];
   } else {
       [Radar searchPointsWithRadius:radius tags:tags limit:limit completionHandler:completionHandler];
@@ -574,7 +578,6 @@
 
 - (void)geocode:(FlutterMethodCall *)call withResult:(FlutterResult)result {
     NSString *query = call.arguments[@"query"];
-
     [Radar geocodeAddress:query completionHandler:^(RadarStatus status, NSArray<RadarAddress *> * _Nullable addresses) {
         NSMutableDictionary *dict = [NSMutableDictionary new];
         [dict setObject:[Radar stringForStatus:status] forKey:@"status"];

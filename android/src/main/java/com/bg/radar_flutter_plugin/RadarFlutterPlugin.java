@@ -466,7 +466,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         }
     }
 
-    private void searchGeofences(MethodCall call, final Result result) {
+    private void searchGeofences(MethodCall call, final Result result) throws JSONException {
         Radar.RadarSearchGeofencesCallback callback = new Radar.RadarSearchGeofencesCallback() {
             @Override
             public void onComplete(final Radar.RadarStatus status, final Location location, final RadarGeofence[] geofences) {
@@ -495,7 +495,7 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
             final HashMap locationMap = (HashMap) call.argument("near");
             near = locationMapToLocation(locationMap,"RadarFlutterPlugin");
         }
-        JSONObject metadata = call.argument("metadata") != null ? (JSONObject) call.argument("metadata") : null;
+        JSONObject metadata = call.argument("metadata") != null ? getJsonFromMetadata((HashMap) call.argument("metadata")) : null;
         int radius = call.argument("radius") != null  ? (int) call.argument("radius") : 1000;
         String[] tags = new String[0];
         try {
@@ -816,15 +816,16 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
 
     public void startTrip(MethodCall call,Result result) {
         final HashMap tripOptionsMap = (HashMap) call.arguments;
-        JSONObject jsonTripOptions = new JSONObject(tripOptionsMap);
-//        JSONObject tripOptionsJson = null;
-//        try {
-//            tripOptionsJson = getJsonFromTripOptionsMap(tripOptionsMap);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
-//        RadarTripOptions options = RadarTripOptions.fromJson(tripOptionsJson);
-        RadarTripOptions options = RadarTripOptions.fromJson(jsonTripOptions);
+        // only works for Map<String, String>
+        // JSONObject jsonTripOptions = new JSONObject(tripOptionsMap);
+        // RadarTripOptions options = RadarTripOptions.fromJson(jsonTripOptions);
+        JSONObject tripOptionsJson = null;
+        try {
+            tripOptionsJson = getJsonFromTripOptionsMap(tripOptionsMap);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        RadarTripOptions options = RadarTripOptions.fromJson(tripOptionsJson);
         Radar.startTrip(options);
         result.success(true);
     }
@@ -907,20 +908,33 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
             jsonData.put("destinationGeofenceExternalId",map.get("destinationGeofenceExternalId"));
             jsonData.put("destinationGeofenceTag",map.get("destinationGeofenceTag"));
             jsonData.put("externalId",map.get("externalId"));
-//        if (map.containsKey("metadata")) {
-//            Map<String, Object> metadata = (Map<String, Object>) map.get("metadata");
-//             for (String key : metadata.keySet()) {
-//                 Object value = metadata.get(key);
-//                 jsonData.put(key, value);
-//             }
-//        }
-
-            JSONObject metadata = new JSONObject();
-            jsonData.put("metadata",metadata);
+            if (map.containsKey("metadata")) {
+                JSONObject jsonMetadata = new JSONObject();
+                Map<String, Object> metadata = (Map<String, Object>) map.get("metadata");
+                for (String key : metadata.keySet()) {
+                    Object value = metadata.get(key);
+                    jsonMetadata.put(key, value);
+                }
+                jsonData.put("metadata",jsonMetadata);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return jsonData;
+    }
+
+    private JSONObject getJsonFromMetadata(HashMap metadata) throws JSONException {
+        JSONObject jsonMetadata = new JSONObject();
+        try {
+            for (Object key : metadata.keySet()) {
+                String keyString = String.valueOf(key);
+                Object value = metadata.get(keyString);
+                jsonMetadata.put(keyString, value);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonMetadata;
     }
 
     private static String[] strArrayForArrList(ArrayList arrList) throws JSONException {

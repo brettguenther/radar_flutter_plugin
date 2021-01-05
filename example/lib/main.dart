@@ -18,6 +18,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> setupRadar() async {
     // print("starting radar");
+    // NOTE: only use this initialization path over the native code path if you do not need background location tracking (startTracking()).
     // try {
     //   await RadarFlutterPlugin.initialize("<yourPublishableKey>");
     // } on PlatformException catch (e) {
@@ -48,16 +49,16 @@ class _MyAppState extends State<MyApp> {
     Map userMetadata = await RadarFlutterPlugin.getMetadata();
     print("current metadata: ");
     print(userMetadata);
-    // Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
-    //     {
-    //       "latitude": 40.704103,
-    //       "longitude": -73.987067,
-    //     },
-    //     radius: 5000,
-    //     limit: 5,
-    //     tags: ["store"]);
-    // print("nearby geofences output:");
-    // print(nearbyGeofences["geofences"]);
+    Map nearbyGeofences = await RadarFlutterPlugin.searchGeofences(
+        near: {
+          "latitude": 40.704103,
+          "longitude": -73.987067,
+        },
+        radius: 5000,
+        limit: 5,
+        tags: ["store"]);
+    print("nearby geofences output:");
+    print(nearbyGeofences["geofences"]);
 
     // Map context = await RadarFlutterPlugin.getContext({
     //   "latitude": 40.704103,
@@ -67,21 +68,21 @@ class _MyAppState extends State<MyApp> {
     // print(context["context"]);
 
     // Map nearbyPlaces = await RadarFlutterPlugin.searchPlaces(
-    //     {"latitude": 40.704103, "longitude": -73.987067},
-    //     5000,
-    //     5,
-    //     ["starbucks"]);
+    //     near: {"latitude": 40.704103, "longitude": -73.987067},
+    //     radius: 5000,
+    //     limit: 5,
+    //     chains:["starbucks"]);
     // print("nearby places output:");
     // print(nearbyPlaces["places"]);
 
     // Map nearbyPoints = await RadarFlutterPlugin.searchPoints(
-    //     {
+    //     near:{
     //       "latitude": 40.704103,
     //       "longitude": -73.987067,
     //     },
-    //     5000,
-    //     5,
-    //     ["store"]);
+    //     radius: 5000,
+    //     limit: 5,
+    //     tags: ["store"]);
     // print("nearby points output:");
     // print(nearbyPoints["points"]);
 
@@ -106,11 +107,11 @@ class _MyAppState extends State<MyApp> {
     // print(distance);
 
     // Map<String, dynamic> tripOptions = {
-    //   "externalId": "flutterTrip9",
+    //   "externalId": "flutterTrip1",
     //   "destinationGeofenceTag": "store",
     //   "destinationGeofenceExternalId": "123",
-    //   "mode": "car"
-    //   // ,"metadata": {"Name": "Rob", "CarType": "SUV"}
+    //   "mode": "car",
+    //   "metadata": {"Name": "Rob", "CarType": "SUV"}
     // };
     // RadarFlutterPlugin.startTrip(tripOptions);
     // Map currentTripOptions = await RadarFlutterPlugin.getTripOptions();
