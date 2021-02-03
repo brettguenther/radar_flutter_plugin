@@ -11,5 +11,6 @@
 <!--          <action android:name="io.radar.sdk.RECEIVED" />-->
 <!--      </intent-filter>-->
 <!--    </receiver>-->
+    <service android:name="com.bg.radar_flutter_plugin.RadarForegroundService" android:foregroundServiceType="location" android:stopWithTask="true" />
   </application>
 </manifest>

@@ -13,3 +13,9 @@
 * change positional to named arguments for search endpoints (geofences,places,points)
 * allow for trip metadata and geofence metadata search
 * handle null locations properly on iOS in search endpoints
+
+## 0.0.3+1
+* remove callback_dispatcher
+
+## 0.0.3+2
+* ability to start and stop a foreground location service
