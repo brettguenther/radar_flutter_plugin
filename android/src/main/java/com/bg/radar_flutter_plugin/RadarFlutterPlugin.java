@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -65,9 +66,9 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
 //        this.applicationContext = context;
 //    }
 
-//    private Activity getActivity() {
-//        return registrar != null ? registrar.activity() : activity;
-//    }
+   private Activity getActivity() {
+       return registrar != null ? registrar.activity() : activity;
+   }
 //
 //    private void setActivity(Activity activity) {
 //        this.activity = activity;
@@ -219,6 +220,12 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
                     break;
                 case "cancelTrip":
                     cancelTrip(result);
+                    break;
+                case "startForegroundService":
+                    startForegroundService(call,result);
+                    break;
+                case "stopForegroundService":
+                    stopForegroundService(call,result);
                     break;
                 // case "mockTracking":
                 //     mockTracking(call,result);
@@ -844,6 +851,35 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     public void cancelTrip(Result result) {
         Radar.cancelTrip();
         result.success(true);
+    }
+
+    public void startForegroundService(MethodCall call, Result result) {
+        if (Build.VERSION.SDK_INT >= 26) {
+            Intent intent = new Intent(activity, RadarForegroundService.class);
+            final String title = call.argument("title");
+            final String text = call.argument("text");
+            final String icon = call.argument("icon");
+            final String importance = call.argument("importance");
+            final String id = call.argument("id");
+            intent.setAction("start");
+            intent.putExtra("title", title)
+                .putExtra("text", text)
+                .putExtra("icon", icon)
+                .putExtra("importance", importance)
+                .putExtra("id", id)
+                .putExtra("activity", activity.getClass().getCanonicalName());
+            applicationContext.startForegroundService(intent);
+            result.success(true);
+        }
+    }
+
+    public void stopForegroundService(MethodCall call, Result result) throws JSONException {
+        if (Build.VERSION.SDK_INT >= 26) {
+            Intent intent = new Intent(activity, RadarForegroundService.class);
+            intent.setAction("stop");
+            applicationContext.startService(intent);
+            result.success(true);
+        }
     }
 
     // public void mockTracking(MethodCall call,final Result result) {

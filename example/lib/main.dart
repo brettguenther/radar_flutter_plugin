@@ -60,6 +60,15 @@ class _MyAppState extends State<MyApp> {
     print("nearby geofences output:");
     print(nearbyGeofences["geofences"]);
 
+    Map<String, String> foregroundServiceOptions = {
+      "title": "Monitoring",
+      "text": "We are actively used your location",
+      "icon": "car_icon",
+      "importance": "2",
+      "id": "12555541"
+    };
+    RadarFlutterPlugin.startForegroundService(foregroundServiceOptions);
+
     // Map context = await RadarFlutterPlugin.getContext({
     //   "latitude": 40.704103,
     //   "longitude": -73.987067,
@@ -180,6 +189,13 @@ class _MyAppState extends State<MyApp> {
               print(location);
             },
             child: Text("get Location"),
+          ),
+          RaisedButton(
+            color: Colors.blueAccent,
+            onPressed: () {
+              RadarFlutterPlugin.stopForegroundService();
+            },
+            child: Text("Stop Foreground Service"),
           )
         ]),
       ),

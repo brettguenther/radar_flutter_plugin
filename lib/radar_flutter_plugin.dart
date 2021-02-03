@@ -445,6 +445,24 @@ class RadarFlutterPlugin {
     }
   }
 
+  static Future startForegroundService(
+      Map<String, String> foregroundServiceOptions) async {
+    try {
+      await _channel.invokeMethod(
+          'startForegroundService', foregroundServiceOptions);
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
+
+  static Future stopForegroundService() async {
+    try {
+      await _channel.invokeMethod('stopForegroundService');
+    } on PlatformException catch (e) {
+      print("Got error: $e");
+    }
+  }
+
   // static Future<Map> mockTracking(
   //     Map<String, dynamic> origin,
   //     Map<String, dynamic> destination,

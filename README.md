@@ -22,9 +22,9 @@ Flutter support:
 * Search (geofences, points and places)
 * Location tracking and context (foreground and background)
 * Trip tracking
+* Create a Location Permissed Foreground Service (Android)
 
 ## Planned features
-* Trip Tracking and geofence search metadata
 * Mock tracking
 * Accept/reject events
 
@@ -53,6 +53,15 @@ In the **android/app/src/main/AndroidManifest.xml** let’s add:
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     ...
  </manifest>
+```
+
+#### **Use the Plugin's Foreground Service**
+The Plugin also includes the ability to start a foreground service associated with the main activity. This allows for continued location updates when the app is backgrounded but the while in use location permission is granted and also allows for mitigation of [background location limits] (https://developer.android.com/training/location/background#limit-updates).
+
+If there is planned use of this functionality, in the the **android/app/src/main/AndroidManifest.xml** let's add: 
+
+```dart 
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 ```
 
 #### add Radar SDK module to the app `build.gradle` file:
