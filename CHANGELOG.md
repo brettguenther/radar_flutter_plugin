@@ -19,3 +19,6 @@
 
 ## 0.0.3+2
 * ability to start and stop a foreground location service
+
+## 0.0.3+3
+* push receiver back to manifest

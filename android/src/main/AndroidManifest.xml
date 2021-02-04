@@ -3,14 +3,14 @@
     <!-- <application tools:replace="android:name"
     android:name="com.bg.radar_flutter_plugin_example"> -->
   <application>
-<!--    <receiver-->
-<!--      android:name="RadarFlutterPlugin$RadarFlutterReceiver"-->
-<!--      android:enabled="true"-->
-<!--      android:exported="false">-->
-<!--      <intent-filter>-->
-<!--          <action android:name="io.radar.sdk.RECEIVED" />-->
-<!--      </intent-filter>-->
-<!--    </receiver>-->
+    <receiver
+      android:name="RadarFlutterPlugin$RadarFlutterReceiver"
+      android:enabled="true"
+      android:exported="false">
+      <intent-filter>
+          <action android:name="io.radar.sdk.RECEIVED" />
+      </intent-filter>
+    </receiver>
     <service android:name="com.bg.radar_flutter_plugin.RadarForegroundService" android:foregroundServiceType="location" android:stopWithTask="true" />
   </application>
 </manifest>
