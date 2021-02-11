@@ -5,6 +5,11 @@
 @interface RadarFlutterPlugin() <RadarDelegate>
  @property (strong, nonatomic) FlutterMethodChannel *channel;
  @property (strong, readwrite) CLLocationManager *locationManager;
+ @property(nonatomic, retain) LocationStreamHandler *locationStreamHandler;
+ @property(nonatomic, retain) ClientLocationStreamHandler *clientLocationStreamHandler;
+ @property(nonatomic, retain) EventStreamHandler *eventStreamHandler;
+ @property(nonatomic, retain) ErrorStreamHandler *errorStreamHandler;
+ @property(nonatomic, retain) LogStreamHandler *logStreamHandler;
 @end
 
 @implementation RadarFlutterPlugin
@@ -14,7 +19,45 @@
             binaryMessenger:[registrar messenger]];
   RadarFlutterPlugin* instance = [[RadarFlutterPlugin alloc] init];
   instance.channel = channel;
+  FlutterEventChannel* locationChannel =
+    [FlutterEventChannel eventChannelWithName:@"radar_flutter_plugin/location_stream"
+                              binaryMessenger:[registrar messenger]];
+  FlutterEventChannel* clientLocationChannel =
+  [FlutterEventChannel eventChannelWithName:@"radar_flutter_plugin/client_location_stream"
+                            binaryMessenger:[registrar messenger]];
+ FlutterEventChannel* eventChannel =
+  [FlutterEventChannel eventChannelWithName:@"radar_flutter_plugin/event_stream"
+                            binaryMessenger:[registrar messenger]];
+  FlutterEventChannel* logChannel =
+  [FlutterEventChannel eventChannelWithName:@"radar_flutter_plugin/log_stream"
+                            binaryMessenger:[registrar messenger]];
+   FlutterEventChannel* errorChannel =
+  [FlutterEventChannel eventChannelWithName:@"radar_flutter_plugin/error_stream"
+                            binaryMessenger:[registrar messenger]];                           
+
+
+  LocationStreamHandler* locationStreamHandler = [[LocationStreamHandler alloc] init];
+  [locationChannel setStreamHandler:locationStreamHandler];
+  instance.locationStreamHandler = locationStreamHandler;
+
+  ClientLocationStreamHandler* clientLocationStreamHandler = [[ClientLocationStreamHandler alloc] init];
+  [clientLocationChannel setStreamHandler:clientLocationStreamHandler];
+  instance.clientLocationStreamHandler = clientLocationStreamHandler;
+
+  EventStreamHandler* eventStreamHandler = [[EventStreamHandler alloc] init];
+  [eventChannel setStreamHandler:eventStreamHandler];
+  instance.eventStreamHandler = eventStreamHandler;
+
+  ErrorStreamHandler* errorStreamHandler = [[ErrorStreamHandler alloc] init];
+  [errorChannel setStreamHandler:errorStreamHandler];
+  instance.errorStreamHandler = errorStreamHandler;
+
+  LogStreamHandler* logStreamHandler = [[LogStreamHandler alloc] init];
+  [logChannel setStreamHandler:logStreamHandler];
+  instance.logStreamHandler = logStreamHandler;
+
   [registrar addMethodCallDelegate:instance channel:channel];
+
 }
 
 - (instancetype)init
@@ -746,11 +789,16 @@
     NSDictionary *tripDict = [[userDict objectForKey:@"trip"] dictionaryValue];
     [newUserDict setObject:tripDict forKey:@"trip"];
     NSDictionary *dict = @{@"events": [RadarEvent arrayForEvents:events], @"user": newUserDict};
-      [_channel invokeMethod:@"onEvents" arguments:dict];
+    if(_eventStreamHandler.sink != nil) {
+      self.eventStreamHandler.sink(dict);
+    }
   }
   else {
     NSDictionary *dict = @{@"events": [RadarEvent arrayForEvents:events], @"user": userDict};
-      [_channel invokeMethod:@"onEvents" arguments:dict];
+      // [_channel invokeMethod:@"onEvents" arguments:dict];
+      if(_eventStreamHandler.sink != nil) {
+        self.eventStreamHandler.sink(dict);
+      }
   }
   // NSDictionary *dict = @{@"events": [RadarEvent arrayForEvents:events], @"user": [user dictionaryValue]};
 }
@@ -764,31 +812,112 @@
     NSDictionary *tripDict = [[userDict objectForKey:@"trip"] dictionaryValue];
     [newUserDict setObject:tripDict forKey:@"trip"];
     NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"user": newUserDict };
-      [_channel invokeMethod:@"onLocation" arguments:dict];
+    if(_locationStreamHandler.sink != nil) {
+      self.locationStreamHandler.sink(dict);
+    }
 
   }
   else {
     NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"user": userDict};
-      [_channel invokeMethod:@"onLocation" arguments:dict];
-
+    // [_channel invokeMethod:@"onLocation" arguments:dict];
+    if(_locationStreamHandler.sink != nil) {
+      self.locationStreamHandler.sink(dict);
+    }
   }
 }
 
 - (void)didUpdateClientLocation:(CLLocation *)location stopped:(BOOL)stopped source:(RadarLocationSource)source {
   NSDictionary *dict = @{@"location": [Radar dictionaryForLocation:location], @"stopped": @(stopped), @"source": [Radar stringForSource:source]};
-  [_channel invokeMethod:@"onClientLocation" arguments:dict];
+  // [_channel invokeMethod:@"onClientLocation" arguments:dict];
+  if(_clientLocationStreamHandler.sink != nil) {
+    self.clientLocationStreamHandler.sink(dict);
+  }
 }
 
 - (void)didFailWithStatus:(RadarStatus)status {
   NSDictionary *dict = @{@"status": [Radar stringForStatus:status]};
-  [_channel invokeMethod:@"onError" arguments:dict];
+  // [_channel invokeMethod:@"onError" arguments:dict];
+  if(_errorStreamHandler.sink != nil) {
+    self.errorStreamHandler.sink(dict);
+  }
 }
 
 - (void)didLogMessage:(NSString *)message {
   NSDictionary *dict = @{@"message": message};
-  [_channel invokeMethod:@"onLog" arguments:dict];
+  if(_logStreamHandler.sink != nil) {
+    self.logStreamHandler.sink(dict);
+  }
+}
+
+@end
+
+@implementation LocationStreamHandler
+
+- (FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)eventSink {
+  self.sink = eventSink;
+  return nil;
+}
+
+- (FlutterError*)onCancelWithArguments:(id)arguments {
+  self.sink = nil;
+  return nil;
 }
 
 @end
 
 
+@implementation ClientLocationStreamHandler
+
+- (FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)eventSink {
+  self.sink = eventSink;
+  return nil;
+}
+
+- (FlutterError*)onCancelWithArguments:(id)arguments {
+  self.sink = nil;
+  return nil;
+}
+
+@end
+
+@implementation EventStreamHandler
+
+- (FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)eventSink {
+  self.sink = eventSink;
+  return nil;
+}
+
+- (FlutterError*)onCancelWithArguments:(id)arguments {
+  self.sink = nil;
+  return nil;
+}
+
+@end
+
+@implementation ErrorStreamHandler
+
+- (FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)eventSink {
+  self.sink = eventSink;
+  return nil;
+}
+
+- (FlutterError*)onCancelWithArguments:(id)arguments {
+  self.sink = nil;
+  return nil;
+}
+
+@end
+
+@implementation LogStreamHandler
+
+- (FlutterError*)onListenWithArguments:(id)arguments eventSink:(FlutterEventSink)eventSink {
+  self.sink = eventSink;
+  return nil;
+}
+
+- (FlutterError*)onCancelWithArguments:(id)arguments {
+  self.sink = nil;
+  return nil;
+}
+
+@end
