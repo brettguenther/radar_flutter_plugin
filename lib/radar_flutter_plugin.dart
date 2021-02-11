@@ -5,13 +5,22 @@ import 'package:flutter/services.dart';
 class RadarFlutterPlugin {
   static const MethodChannel _channel =
       const MethodChannel('radar_flutter_plugin');
+  static const EventChannel _clientLocationEventChannel =
+      const EventChannel("radar_flutter_plugin/client_location_stream");
+  static const EventChannel _locationEventChannel =
+      const EventChannel("radar_flutter_plugin/location_stream");
+  static const EventChannel _eventChannel =
+      const EventChannel("radar_flutter_plugin/event_stream");
+  static const EventChannel _logChannel =
+      const EventChannel("radar_flutter_plugin/log_stream");
+  static const EventChannel _errorChannel =
+      const EventChannel("radar_flutter_plugin/error_stream");
 
-  // event handlers
-  static Function(Map result) _clientLocationHandler;
-  static Function(Map result) _eventHandler;
-  static Function(Map result) _locationHandler;
-  static Function(Map result) _errorHandler;
-  static Function(Map result) _logHandler;
+  static Stream<dynamic> _onClientLocationUpdated;
+  static Stream<dynamic> _onLocationUpdated;
+  static Stream<dynamic> _onEventsReceived;
+  static Stream<dynamic> _onError;
+  static Stream<dynamic> _onLog;
 
   // RadarFlutterPlugin() {
   //   RadarFlutterPlugin._channel
@@ -479,73 +488,48 @@ class RadarFlutterPlugin {
   //   }
   // }
 
-  static startListeners() {
-    _channel.setMethodCallHandler((MethodCall methodCall) async {
-      if (methodCall.method == "onClientLocation" &&
-          _clientLocationHandler != null) {
-        // print("processing client location");
-        Map resultData = Map.from(methodCall.arguments);
-        _clientLocationHandler(resultData);
-      } else if (methodCall.method == "onEvents" && _eventHandler != null) {
-        // print("processing events");
-        Map resultData = Map.from(methodCall.arguments);
-        _eventHandler(resultData);
-      } else if (methodCall.method == "onLocation" &&
-          _locationHandler != null) {
-        // print("processing location");
-        Map resultData = Map.from(methodCall.arguments);
-        _locationHandler(resultData);
-      } else if (methodCall.method == "onError" && _errorHandler != null) {
-        // print("processing error");
-        Map resultData = Map.from(methodCall.arguments);
-        _errorHandler(resultData);
-      } else if (methodCall.method == "onLog" && _logHandler != null) {
-        // print("processing error");
-        Map resultData = Map.from(methodCall.arguments);
-        _logHandler(resultData);
-      }
-      return null;
-    });
+  static Stream<dynamic> get onLocationUpdated {
+    _onLocationUpdated ??= _locationEventChannel.receiveBroadcastStream();
+    return _onLocationUpdated;
   }
 
-  static onClientLocation(
-      Function(Map<dynamic, dynamic> result) resultProcess) {
-    _clientLocationHandler = resultProcess;
+  static Stream<dynamic> get onClientLocationUpdated {
+    _onClientLocationUpdated ??=
+        _clientLocationEventChannel.receiveBroadcastStream();
+    return _onClientLocationUpdated;
   }
 
-  static offClientLocation() {
-    _clientLocationHandler = null;
+  static Stream<dynamic> get onEventsReceived {
+    _onEventsReceived ??= _eventChannel.receiveBroadcastStream();
+    return _onEventsReceived;
   }
 
-  static onEvents(Function(Map<dynamic, dynamic> result) resultProcess) {
-    _eventHandler = resultProcess;
+  static Stream<dynamic> get onLog {
+    _onLog ??= _logChannel.receiveBroadcastStream();
+    return _onLog;
   }
 
-  static offEvents() {
-    _eventHandler = null;
+  static Stream<dynamic> get onError {
+    _onError ??= _errorChannel.receiveBroadcastStream();
+    return _onError;
   }
 
-  static onLocation(Function(Map<dynamic, dynamic> result) resultProcess) {
-    _locationHandler = resultProcess;
-  }
+  //   static const MethodChannel _channel =
+  //     const MethodChannel('radar_flutter_plugin');
+  // static const EventChannel _clientLocationEventChannel =
+  //     const EventChannel("radar_flutter_plugin/client_location_stream");
+  // static const EventChannel _locationEventChannel =
+  //     const EventChannel("radar_flutter_plugin/location_stream");
+  // static const EventChannel _eventChannel =
+  //     const EventChannel("radar_flutter_plugin/event_stream");
+  // static const EventChannel _logChannel =
+  //     const EventChannel("radar_flutter_plugin/log_stream");
+  // static const EventChannel _errorChannel =
+  //     const EventChannel("radar_flutter_plugin/error_stream");
 
-  static offLocation() {
-    _locationHandler = null;
-  }
-
-  static onError(Function(Map<dynamic, dynamic> result) resultProcess) {
-    _errorHandler = resultProcess;
-  }
-
-  static offError() {
-    _errorHandler = null;
-  }
-
-  static onLog(Function(Map<dynamic, dynamic> result) resultProcess) {
-    _logHandler = resultProcess;
-  }
-
-  static offLog() {
-    _logHandler = null;
-  }
+  // static Stream<dynamic> _onClientLocationUpdated;
+  // static Stream<dynamic> _onLocationUpdated;
+  // static Stream<dynamic> _onEventsReceived;
+  // static Stream<dynamic> _onError;
+  // static Stream<dynamic> _onLog;
 }

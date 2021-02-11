@@ -26,15 +26,18 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.StreamHandler;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.embedding.engine.systemchannels.RestorationChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+import io.flutter.plugin.common.EventChannel;
 
 import io.radar.sdk.Radar;
 import io.radar.sdk.RadarReceiver;
@@ -56,8 +59,23 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     /// This local reference serves to register the plugin with the Flutter Engine and unregister it
     /// when the Flutter Engine is detached from the Activity
     public static MethodChannel channel;
+//    public static EventChannel eventChannel;
+    public static EventChannel locationChannel;
+    public static EventChannel clientLocationChannel;
+    public static EventChannel eventChannel;
+    public static EventChannel logChannel;
+    public static EventChannel errorChannel;
+
     private Activity activity;
     private Registrar registrar;
+
+    public static LocationStreamHandler locationStreamHandler = new LocationStreamHandler();
+    public static ClientLocationStreamHandler clientLocationStreamHandler = new ClientLocationStreamHandler();
+    public static EventStreamHandler eventStreamHandler = new EventStreamHandler();
+    public static LogStreamHandler logStreamHandler = new LogStreamHandler();
+    public static ErrorStreamHandler errorStreamHandler = new ErrorStreamHandler();
+    
+    // public static EventChannel.EventSink mEventSink;
 
     private Context applicationContext;
     // private BroadcastReceiver radarFlutterReceiver;
@@ -105,7 +123,19 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         channel = new MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "radar_flutter_plugin");
+
+        locationChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),"radar_flutter_plugin/location_stream");
+        clientLocationChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),"radar_flutter_plugin/client_location_stream");
+        eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),"radar_flutter_plugin/event_stream");
+        errorChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),"radar_flutter_plugin/error_stream");
+        logChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),"radar_flutter_plugin/log_stream");
         channel.setMethodCallHandler(this);
+        locationChannel.setStreamHandler(locationStreamHandler);
+        clientLocationChannel.setStreamHandler(clientLocationStreamHandler);
+        eventChannel.setStreamHandler(eventStreamHandler);
+        errorChannel.setStreamHandler(errorStreamHandler);
+        logChannel.setStreamHandler(logStreamHandler);
+
         applicationContext = flutterPluginBinding.getApplicationContext();
         // radarFlutterReceiver = new RadarFlutterReceiver();
         // IntentFilter filter = new IntentFilter();
@@ -124,8 +154,18 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
     // in the same class.
     public static void registerWith(Registrar registrar) {
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "radar_flutter_plugin");
+        final EventChannel locationChannel = new EventChannel(registrar.messenger(),"radar_flutter_plugin/location_stream");
+        final EventChannel clientLocationChannel = new EventChannel(registrar.messenger(),"radar_flutter_plugin/client_location_stream");
+        final EventChannel eventChannel = new EventChannel(registrar.messenger(),"radar_flutter_plugin/event_stream");
+        final EventChannel errorChannel = new EventChannel(registrar.messenger(),"radar_flutter_plugin/error_stream");
+        final EventChannel logChannel = new EventChannel(registrar.messenger(),"radar_flutter_plugin/log_stream");
         final RadarFlutterPlugin plugin = new RadarFlutterPlugin();
         channel.setMethodCallHandler(plugin);
+        locationChannel.setStreamHandler(locationStreamHandler);
+        clientLocationChannel.setStreamHandler(clientLocationStreamHandler);
+        eventChannel.setStreamHandler(eventStreamHandler);
+        errorChannel.setStreamHandler(errorStreamHandler);
+        logChannel.setStreamHandler(logStreamHandler);
         plugin.applicationContext = registrar.context();
         plugin.activity = registrar.activity();
     }
@@ -987,73 +1027,97 @@ public class RadarFlutterPlugin implements FlutterPlugin, MethodCallHandler, Act
         return stringArray;
     }
 
-    public static class RadarFlutterReceiver extends RadarReceiver {
-        @Override
-        public void onEventsReceived(Context context, RadarEvent[] events, RadarUser user) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("events", RadarEvent.toJson(events));
-                obj.put("user", user.toJson());
-                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
-                RadarFlutterPlugin.channel.invokeMethod("onEvents",hObj);
-            } catch (JSONException e) {
-                Log.d("RadarFlutterPlugin", "Error in client location handling: " + e.getMessage());
-            }
-//            invokeMethodOnUiThread("clientLocation",hObj);
-//            this.channel.invokeMethod("clientLocation",hObj);
-        }
-    
-        public void onClientLocationUpdated(Context context, Location location, boolean stopped, Radar.RadarLocationSource locationSource) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("location", Radar.jsonForLocation(location));
-                obj.put("stopped", stopped);
-                obj.put("locationSource", locationSource.name());
-                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
-                RadarFlutterPlugin.channel.invokeMethod("onClientLocation",hObj);
-            } catch (JSONException e) {
-                Log.d("RadarFlutterPlugin", "Error in client location handling: "  + e.getMessage());
-            }
-//            invokeMethodOnUiThread("clientLocation",hObj);
-//            this.channel.invokeMethod("clientLocation",hObj);
-        }
-    
-        @Override
-        public void onLocationUpdated(Context context, Location location, RadarUser user) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("location", Radar.jsonForLocation(location));
-                obj.put("user", user.toJson());
-                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
-                RadarFlutterPlugin.channel.invokeMethod("onLocation",hObj);
-            } catch (JSONException e) {
-                Log.d("RadarFlutterPlugin", "Error in location handling: "  + e.getMessage());
-            }
-        }
-    
-        @Override
-        public void onError(Context context, Radar.RadarStatus status) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("status", status.toString());
-                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
-                RadarFlutterPlugin.channel.invokeMethod("onError",hObj);
-            } catch (JSONException e) {
-                Log.d("RadarFlutterPlugin", "Error in error handling:  "  + e.getMessage());
-            }
-        }
-    
-        @Override
-        public void onLog(Context context,String message) {
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("message", message);
-                HashMap<String,Object> hObj = new Gson().fromJson(obj.toString(), HashMap.class);
-                RadarFlutterPlugin.channel.invokeMethod("onLog",hObj);
-            } catch (JSONException e) {
-                Log.d("RadarFlutterPlugin", "Error in log handling:  "  + e.getMessage());
-            }
-        }
+    // @Override
+    // public void onListen(Object args, EventChannel.EventSink eventSink) {
+    //     mEventSink = eventSink;
+    // }
+    // @Override
+    // public void onCancel(Object args) {
+    //     mEventSink = null;
+    // }   
+};
+
+class LocationStreamHandler implements EventChannel.StreamHandler {
+    private static EventChannel.EventSink mEventSink;
+    @Override
+    public void onListen(Object args, EventChannel.EventSink eventSink) {
+        mEventSink = eventSink;
     }
 
+    public void send(HashMap<String,Object> hObj) {
+        mEventSink.success(hObj);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        mEventSink = null;
+    }   
+};
+
+class ClientLocationStreamHandler implements EventChannel.StreamHandler {
+    private static EventChannel.EventSink mEventSink;
+    @Override
+    public void onListen(Object args, EventChannel.EventSink eventSink) {
+        mEventSink = eventSink;
+    }
+
+    public void send(HashMap<String,Object> hObj) {
+        mEventSink.success(hObj);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        mEventSink = null;
+    }
+};
+
+class EventStreamHandler implements EventChannel.StreamHandler {
+    private static EventChannel.EventSink mEventSink;
+    @Override
+    public void onListen(Object args, EventChannel.EventSink eventSink) {
+        mEventSink = eventSink;
+    }
+
+    public void send(HashMap<String,Object> hObj) {
+        mEventSink.success(hObj);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        mEventSink = null;
+    }
+};
+
+class ErrorStreamHandler implements EventChannel.StreamHandler {
+    private static EventChannel.EventSink mEventSink;
+    @Override
+    public void onListen(Object args, EventChannel.EventSink eventSink) {
+        mEventSink = eventSink;
+    }
+
+    public void send(HashMap<String,Object> hObj) {
+        mEventSink.success(hObj);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        mEventSink = null;
+    }
+};
+
+class LogStreamHandler implements EventChannel.StreamHandler {
+    private static EventChannel.EventSink mEventSink;
+    @Override
+    public void onListen(Object args, EventChannel.EventSink eventSink) {
+        mEventSink = eventSink;
+    }
+
+    public void send(HashMap<String,Object> hObj) {
+        mEventSink.success(hObj);
+    }
+
+    @Override
+    public void onCancel(Object args) {
+        mEventSink = null;
+    }
 };

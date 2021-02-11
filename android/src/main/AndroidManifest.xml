@@ -4,7 +4,7 @@
     android:name="com.bg.radar_flutter_plugin_example"> -->
   <application>
     <receiver
-      android:name="RadarFlutterPlugin$RadarFlutterReceiver"
+      android:name=".RadarFlutterReceiver"
       android:enabled="true"
       android:exported="false">
       <intent-filter>

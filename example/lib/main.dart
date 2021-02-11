@@ -30,19 +30,44 @@ class _MyAppState extends State<MyApp> {
     String userString = await RadarFlutterPlugin.getUserId();
     print(userString);
 
-    RadarFlutterPlugin.onClientLocation((result) {
+    RadarFlutterPlugin.onLocationUpdated.listen((result) {
+      print("in location listener");
+      print(result["location"]);
+    });
+
+    RadarFlutterPlugin.onClientLocationUpdated.listen((result) {
+      print("in client location listener");
+      print(result["location"]);
+    });
+
+    RadarFlutterPlugin.onEventsReceived.listen((result) {
+      print("in events");
       print(result);
     });
-    RadarFlutterPlugin.onEvents((result) {
-      print(result);
+
+    RadarFlutterPlugin.onError.listen((err) {
+      print("error");
+      print(err);
     });
-    RadarFlutterPlugin.onLocation((result) {
-      print(result);
+
+    RadarFlutterPlugin.onLog.listen((log) {
+      print("log");
+      print(log);
     });
-    RadarFlutterPlugin.onError((result) {
-      print(result);
-    });
-    RadarFlutterPlugin.startListeners();
+
+    // RadarFlutterPlugin.onClientLocation((result) {
+    //   print(result);
+    // });
+    // RadarFlutterPlugin.onEvents((result) {
+    //   print(result);
+    // });
+    // RadarFlutterPlugin.onLocation((result) {
+    //   print(result);
+    // });
+    // RadarFlutterPlugin.onError((result) {
+    //   print(result);
+    // });
+    // RadarFlutterPlugin.startListeners();
 
     Map<String, dynamic> metadata = {"mKey": "mValue", "isActivated": true};
     RadarFlutterPlugin.setMetadata(metadata);
